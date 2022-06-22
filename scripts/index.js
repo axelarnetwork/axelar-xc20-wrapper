@@ -1,11 +1,14 @@
 'use strict';
 
-const { getDefaultProvider, Contract, constants: { AddressZero }, utils: {defaultAbiCoder, keccak256} } = require('ethers');
+const { getDefaultProvider, Wallet, Contract, constants: { AddressZero }, utils: {defaultAbiCoder, keccak256} } = require('ethers');
 const { utils: { deployContract }, getNetwork} = require('@axelar-network/axelar-local-dev');
 
 const XC20Wrapper = require('../artifacts/contracts/XC20Wrapper.sol/XC20Wrapper.json');
 const XC20Sample = require('../artifacts/contracts/XC20Sample.sol/XC20Sample.json');
 const Proxy = require('../artifacts/contracts/Proxy.sol/Proxy.json');
+const IERC20 = require('../artifacts/@axelar-network/axelar-cgp-solidity/contracts/interfaces/IERC20.sol/IERC20.json');
+const IAxelarGateway = require('../artifacts/@axelar-network/axelar-cgp-solidity/contracts/interfaces/IAxelarGateway.sol/IAxelarGateway.json');
+const { setJSON } = require('@axelar-network/axelar-local-dev/dist/utils');
 
 async function deploy(chain, wallet) {
     console.log(`Deploying XC20Wrapper for ${chain.name}.`);
@@ -28,22 +31,11 @@ async function deploy(chain, wallet) {
         //0x9a289e138d67f0784b748f6f06b39ef6f9cfd5eba9f8467f55002494cf47d343
         defaultAbiCoder.encode(['address', 'address', 'bytes32'], [chain.gateway, wallet.address, codeHash]),
     ]);
-    const contract = new Contract(proxy.address, XC20Wrapper.abi, wallet);
     chain.xc20Wrapper = proxy.address;
     console.log(`Deployed Proxy for ${chain.name} at ${proxy.address}.`);
-    const N = 5;
+    
     chain.xc20Samples = [];
-    console.log(`Deploying XC20Sample ${N+1} times.`);
-    for(let i=0;i<N+1;i++) {
-        const xc20Sample = await deployContract(wallet, XC20Sample, [
-            chain.xc20Wrapper, 
-            'i trust this will hash chaotically'
-        ]);
-        chain.xc20Samples.push(xc20Sample.address);
-        console.log(`Deployed XC20Sample ${i+1} / ${N+1} for ${chain.name} at ${xc20Sample.address}.`);
-    }
-    console.log(`Adding token aUSDC for ${chain.xc20Samples[N]}.`);
-    await addToken(contract.address, 'aUSDC', chain.xc20Samples[N], wallet);
+    
 }
 
 async function addToken(wrapperAddress, symbol, xc20Address, wallet) {
@@ -56,28 +48,50 @@ async function addToken(wrapperAddress, symbol, xc20Address, wallet) {
     )).wait();
 }
 
-async function test(chains, walletUnconnected, options) {
-    const args = options.args || [];
+async function addLocalTokenPair(chains, walletUnconnected) {
     const chain = chains[0];
     const provider = getDefaultProvider(chain.rpc);
     const wallet = walletUnconnected.connect(provider);
-    const wrapper = new Contract(chain.xc20Wrapper, XC20Wrapper.abi, wallet);
-    let i;
-    for(i=0; i<chain.xc20Samples.length;i++) {
-        if(await wrapper.unwrapped(chain.xc20Samples[i]) == AddressZero) break;
-    }
-    if(i == chain.xc20Samples.length) {
-        console.log('All XC20s are being used, deploy some more.');
-        return;
-    }
-    const network = await getNetwork(chain.rpc);
+    console.log(`Deploying XC20Sample.`);
+    const xc20Sample = await deployContract(wallet, XC20Sample, [
+        chain.xc20Wrapper, 
+        'i trust this will hash chaotically'
+    ]);
+    chain.xc20Samples.push(xc20Sample.address);
+    console.log(`Deployed XC20Sample for ${chain.name} at ${xc20Sample.address}.`);
+    const i = chain.xc20Samples.length - 1 ;
     const name = `Test Token #${i}`
     const symbol = `TT${i}`
     const decimals = 13+i;
+
+    for(const chain of chains) {
+        const provider = getDefaultProvider(chain.rpc);
+        const wallet = walletUnconnected.connect(provider);
+        const network = await getNetwork(chain.rpc);
+        const unwrapped = await network.deployToken(name, symbol, decimals, BigInt(1e30), AddressZero);
+        console.log(`Deployed [ ${name}, ${symbol}, ${decimals} ] at ${unwrapped.address}.`);
+        await network.giveToken(wallet.address, symbol, BigInt(1e18));
+    }
+}
+
+async function test(chains, unconnectedWallet, options) {
+    const chain = chains[0];
+    const provider = getDefaultProvider(chain.rpc);
+    const wallet = new Wallet(unconnectedWallet, provider);
+    const wrapper = new Contract(chain.xc20Wrapper, XC20Wrapper.abi, wallet);
+    
+    let i;
+    for(i=chain.xc20Samples.length-1;i>=0;i--) {
+        if(await wrapper.unwrapped(chain.xc20Samples[i]) != AddressZero) break;
+    }
+    if(i < 0) {
+        console.log('Nothing is wrapped.');
+    }
     const xc20 = new Contract(chain.xc20Samples[i], XC20Sample.abi, wallet);
-    const unwrapped = await network.deployToken(name, symbol, decimals, BigInt(1e30), AddressZero);
-    await addToken(wrapper.address, symbol, xc20.address, wallet);
-    await network.giveToken(wallet.address, symbol, BigInt(1e18));
+    const unwrappedAddress = await wrapper.unwrapped(chain.xc20Samples[i]);
+    const unwrapped = new Contract(unwrappedAddress, XC20Sample.abi, wallet);
+    const decimals = await unwrapped.decimals();
+    const symbol = await unwrapped.symbol();
     const amount = BigInt(Math.pow(10, decimals));
 
     async function print() {
@@ -88,6 +102,7 @@ async function test(chains, walletUnconnected, options) {
             setTimeout(() => {resolve()}, ms);
         })
     }
+    
 
     console.log('--- Initially ---');
     await print();
@@ -102,9 +117,56 @@ async function test(chains, walletUnconnected, options) {
 
     console.log('--- After Unwrap---');
     await print();
+
+    const remote = chains[1];
+    const remoteProvider = getDefaultProvider(remote.rpc);
+    const remoteWallet = unconnectedWallet.connect(remoteProvider);
+    const remoteGateway = new Contract(remote.gateway, IAxelarGateway.abi, remoteWallet);
+    const remoteUnwrappedAddress = await remoteGateway.tokenAddresses(symbol);
+    const remoteUnwrapped = new Contract(remoteUnwrappedAddress, IERC20.abi, remoteWallet);
+    await (await remoteUnwrapped.approve(remoteGateway.address, amount)).wait();
+
+    const payload = defaultAbiCoder.encode(['address', 'uint256'], [wallet.address, new Date().getTime()]);
+    await (await remoteGateway.callContractWithToken(
+        chain.name, 
+        chain.xc20Wrapper, 
+        payload,
+        symbol,
+        amount,
+    )).wait();
+    console.log('waiting for call to get there.');
+    const gateway = new Contract(chain.gateway, IAxelarGateway.abi, wallet);
+    const filter = gateway.filters.ContractCallApprovedWithMint(
+        null,
+        null,
+        null,
+        wrapper.address,
+        keccak256(payload),
+    );
+    let validated;
+    while (true) {
+        validated = (await gateway.queryFilter(filter))[0];
+        if (validated) break;
+        await sleep(1000);
+    }
+    console.log('executing');
+    const tx = await (
+        await wrapper.executeWithToken(
+            validated.args.commandId,
+            remote.name,
+            remoteWallet.address,
+            payload,
+            symbol,
+            validated.args.amount,
+        )
+    ).wait();
+    console.log('--- After a execution ---');
+    await print();
 }
 
 module.exports = {
     deploy,
     test,
+    addLocalTokenPair,
+    addToken,
 }

@@ -2,8 +2,7 @@
 
 pragma solidity 0.8.9;
 
-import { IERC20 } from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import { ERC20 } from '@axelar-network/axelar-cgp-solidity/contracts/ERC20.sol';
+import { IERC20 } from './interfaces/IERC20.sol';
 import { IAxelarExecutable } from '@axelar-network/axelar-cgp-solidity/contracts/interfaces/IAxelarExecutable.sol';
 import { IAxelarGateway } from '@axelar-network/axelar-cgp-solidity/contracts/interfaces/IAxelarGateway.sol';
 import './Upgradable.sol';
@@ -37,6 +36,10 @@ contract XC20Wrapper is IAxelarExecutable, Upgradable {
         return keccak256('xc20-wrapper');
     }
 
+    function setXc20Codehash(bytes32 newCodehash) external onlyOwner() {
+        xc20Codehash = newCodehash;
+    }
+
     function addWrapping(
         string calldata symbol, 
         address xc20Token, 
@@ -52,7 +55,18 @@ contract XC20Wrapper is IAxelarExecutable, Upgradable {
         unwrapped[xc20Token] = axelarToken;
         if(!LocalAsset(xc20Token).transfer_ownership(address(this))) revert("NotOwnerOfXc20()");
         LocalAsset(xc20Token).set_team(address(this), address(this), address(this));
-        LocalAsset(xc20Token).set_metadata(newName, newSymbol, ERC20(axelarToken).decimals());
+        LocalAsset(xc20Token).set_metadata(newName, newSymbol, IERC20(axelarToken).decimals());
+    }
+
+    function removeWrapping(
+        string calldata symbol
+    ) external onlyOwner() {
+        address axelarToken = gateway.tokenAddresses(symbol);
+        if(axelarToken == address(0)) revert("NotAxelarToken()");
+        address xc20Token = wrapped[axelarToken];
+        if(xc20Token == address(0)) revert("NotWrappingToken()");
+        wrapped[axelarToken] = address(0);
+        unwrapped[xc20Token] = address(0);
     }
 
     function wrap(address axelarToken, uint256 amount) external {
@@ -91,5 +105,22 @@ contract XC20Wrapper is IAxelarExecutable, Upgradable {
         bool transferred = success && (returnData.length == uint256(0) || abi.decode(returnData, (bool)));
 
         if (!transferred || tokenAddress.code.length == 0) revert("TransferFailed()");
+    }
+
+        function _executeWithToken(
+        string memory,
+        string memory,
+        bytes calldata payload,
+        string memory tokenSymbol,
+        uint256 amount
+    ) internal override {
+        address receiver = abi.decode(payload, (address));
+        address tokenAddress = gateway.tokenAddresses(tokenSymbol);
+        address xc20 = wrapped[tokenAddress];
+        if(xc20 == address(0)) {
+            _safeTransfer(tokenAddress, receiver, amount);
+        } else {
+            LocalAsset(xc20).mint(receiver, amount);
+        }
     }
 }

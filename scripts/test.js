@@ -1,7 +1,7 @@
 'use strict';
-
+require("dotenv").config();
 const { testnetInfo } = require('@axelar-network/axelar-local-dev');
-const {  Wallet } = require('ethers');
+const {  Wallet, getDefaultProvider } = require('ethers');
 const { keccak256, defaultAbiCoder } = require('ethers/lib/utils');
 
 
@@ -18,7 +18,7 @@ module.exports = {
 
 if (require.main === module) {
     //0x8ff26335325ad2c33d87bf8be4a53f28abaac5cf654a42080bc2b91938b1281d
-    const private_key = keccak256(defaultAbiCoder.encode(['string'], ['this is a random string to get a random account. You need to provide the private key for a funded account here.']));
+    const private_key = keccak256(defaultAbiCoder.encode(['string'], [process.env.PRIVATE_KEY_GENERATOR]));
     const wallet = new Wallet(private_key);
 
     const example = require(`./index.js`);
