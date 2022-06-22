@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "scripts": {
     "build": "rm -rf artifacts && hardhat compile",
     "test": "hardhat test",
@@ -17,10 +20,15 @@
   "dependencies": {
     "@nomiclabs/hardhat-waffle": "^2.0.3",
     "@openzeppelin/contracts": "^4.6.0",
+    "esm": "^3.2.25",
     "hardhat": "^2.9.7",
     "hardhat-waffle": "^0.0.1-security"
   },
   "devDependencies": {
-    "@axelar-network/axelar-cgp-solidity": "^4.0.0"
+    "@axelar-network/axelar-cgp-solidity": "^4.0.0",
+    "@axelar-network/axelar-local-dev": "github:axelarnetwork/axelar-local-dev",
+    "hardhat-gas-reporter": "^1.0.8",
+    "solidity-coverage": "^0.7.21",
+    "typescript": "^4.6.3"
   }
 }
