@@ -5,7 +5,7 @@ npm i
 npm run build
 ```
 
-To create a local Moonbeam:
+To create a local Moonbeam (on a separate terminal):
 
 ```
 node scripts/createLocal
