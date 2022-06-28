@@ -26,7 +26,7 @@ async function addWrapping(chains, symbol, walletUnconnected, example) {
     }
     symbol = symbol || `TT${i}`;
     console.log(`Adding wrapping for ${symbol} and ${chain.xc20Samples[i]}`);
-    await example.addToken(wrapper.address, symbol, chain.xc20Samples[i], wallet);
+    await example.addToken(wrapper.address, symbol, chain.xc20Samples[i], wallet, BigInt(2e18));
 }
 
 module.exports = {

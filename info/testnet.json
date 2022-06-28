@@ -9,7 +9,9 @@
     "tokenName": "DEV",
     "tokenSymbol": "DEV",
     "xc20Wrapper": "0x7a852C4F4ecc07164365B0def5F37b44B085C558",
-    "xc20Samples": []
+    "xc20Samples": [
+      "0xffFfFffeFd9d0bf45a2947A519a741c4b9E99EB6"
+    ]
   },
   {
     "name": "Avalanche",

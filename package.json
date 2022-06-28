@@ -12,14 +12,13 @@
     "test-evm-versions": "bash test-evm-versions.bash",
     "lint": "solhint 'contracts/**/*.sol' && eslint 'test/**/*.js'",
     "prettier": "prettier --write 'contracts/**/*.sol' 'test/**/*.js' 'scripts/**/*.js' '*.js' && prettier --write 'scripts/**/*.js'",
-        "flatten": "sh scripts/flatten-contracts.sh"
+    "flatten": "sh scripts/flatten-contracts.sh"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@nomiclabs/hardhat-waffle": "^2.0.3",
-    "@openzeppelin/contracts": "^4.6.0",
     "dotenv": "^16.0.1",
     "esm": "^3.2.25",
     "hardhat": "^2.9.7",

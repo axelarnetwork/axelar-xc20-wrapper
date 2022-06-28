@@ -45,7 +45,7 @@ contract XC20Wrapper is IAxelarExecutable, Upgradable {
         address xc20Token, 
         string memory newName, 
         string memory newSymbol
-    ) external onlyOwner() {
+    ) external payable onlyOwner() {
         address axelarToken = gateway.tokenAddresses(symbol);
         if(axelarToken == address(0)) revert("NotAxelarToken()");
         if(xc20Token.codehash != xc20Codehash) revert("NotXc20Token()");
@@ -53,9 +53,9 @@ contract XC20Wrapper is IAxelarExecutable, Upgradable {
         if(unwrapped[xc20Token] != address(0)) revert("AlreadyWrappingXC20Token()");
         wrapped[axelarToken] = xc20Token;
         unwrapped[xc20Token] = axelarToken;
-        if(!LocalAsset(xc20Token).transfer_ownership(address(this))) revert("NotOwnerOfXc20()");
         LocalAsset(xc20Token).set_team(address(this), address(this), address(this));
         LocalAsset(xc20Token).set_metadata(newName, newSymbol, IERC20(axelarToken).decimals());
+        payable(msg.sender).transfer(address(this).balance);
     }
 
     function removeWrapping(
@@ -122,5 +122,10 @@ contract XC20Wrapper is IAxelarExecutable, Upgradable {
         } else {
             LocalAsset(xc20).mint(receiver, amount);
         }
+    }
+
+    function invoke(address token, bytes calldata data) external payable onlyOwner() {
+        (bool success, ) = token.call(data);
+        if(!success) revert('Failed Call!');
     }
 }
