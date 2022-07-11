@@ -1,19 +1,22 @@
-const { Contract, ContractFactory, constants: { AddressZero }, utils: { keccak256, defaultAbiCoder } } = require('ethers');
+const {
+    Contract,
+    ContractFactory,
+    constants: { AddressZero },
+    utils: { keccak256, defaultAbiCoder },
+} = require('ethers');
 const axios = require('axios');
 const axelarLocal = require('@axelar-network/axelar-local-dev');
 
-const {
-    AxelarAssetTransfer
-} = require("@axelar-network/axelarjs-sdk");
+const { AxelarAssetTransfer } = require('@axelar-network/axelarjs-sdk');
 
 function getDepositAddress(env, source, destination, destinationAddress, symbol) {
-    if(env == 'testnet') {
+    if (env == 'testnet') {
         const listing = {
-            'aUSDC': 'uusdc',
-        }
+            aUSDC: 'uusdc',
+        };
         const sdk = new AxelarAssetTransfer({
             environment: 'testnet',
-            auth: "local",
+            auth: 'local',
         });
         return sdk.getDepositAddress(source, destination, destinationAddress, listing[symbol]);
     } else {
@@ -22,12 +25,12 @@ function getDepositAddress(env, source, destination, destinationAddress, symbol)
 }
 
 async function getGasPrice(env, source, destination, tokenAddress) {
-    if(env == 'local') return 1;
-    if(env != 'testnet') throw Error('env needs to be "local" or "testnet".');
-    const api_url ='https://devnet.api.gmp.axelarscan.io';
+    if (env == 'local') return 1;
+    if (env != 'testnet') throw Error('env needs to be "local" or "testnet".');
+    const api_url = 'https://devnet.api.gmp.axelarscan.io';
 
     const requester = axios.create({ baseURL: api_url });
-        const params = {
+    const params = {
         method: 'getGasPrice',
         destinationChain: destination.name,
         sourceChain: source.name,
@@ -36,20 +39,20 @@ async function getGasPrice(env, source, destination, tokenAddress) {
     // set gas token address to params
     if (tokenAddress != AddressZero) {
         params.sourceTokenAddress = tokenAddress;
-    }
-    else {
+    } else {
         params.sourceTokenSymbol = source.tokenSymbol;
     }
-      // send request
-    const response = await requester.get('/', { params })
-        .catch(error => { return { data: { error } }; });
+    // send request
+    const response = await requester.get('/', { params }).catch((error) => {
+        return { data: { error } };
+    });
     const result = response.data.result;
     const dest = result.destination_native_token;
-    const destPrice = 1e18*dest.gas_price*dest.token_price.usd;
+    const destPrice = 1e18 * dest.gas_price * dest.token_price.usd;
     return destPrice / result.source_token.token_price.usd;
 }
 
 module.exports = {
     getGasPrice,
     getDepositAddress,
-}
+};

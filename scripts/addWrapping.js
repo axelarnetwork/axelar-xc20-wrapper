@@ -1,10 +1,13 @@
-
-
 'use strict';
-require("dotenv").config();
+require('dotenv').config();
 const { testnetInfo } = require('@axelar-network/axelar-local-dev');
 const { setJSON } = require('@axelar-network/axelar-local-dev/dist/utils');
-const {  Wallet, getDefaultProvider, Contract, constants: {AddressZero} } = require('ethers');
+const {
+    Wallet,
+    getDefaultProvider,
+    Contract,
+    constants: { AddressZero },
+} = require('ethers');
 const { keccak256, defaultAbiCoder } = require('ethers/lib/utils');
 
 const XC20Wrapper = require('../artifacts/contracts/XC20Wrapper.sol/XC20Wrapper.json');
@@ -17,11 +20,11 @@ async function addWrapping(chains, symbol, walletUnconnected, example) {
     const wallet = walletUnconnected.connect(provider);
     const wrapper = new Contract(chain.xc20Wrapper, XC20Wrapper.abi, wallet);
     let i;
-    for(i=0; i<chain.xc20Samples.length;i++) {
-        if(await wrapper.unwrapped(chain.xc20Samples[i]) == AddressZero) break;
+    for (i = 0; i < chain.xc20Samples.length; i++) {
+        if ((await wrapper.unwrapped(chain.xc20Samples[i])) == AddressZero) break;
     }
-    if(i == chain.xc20Samples.length) {
-        console.log('Need to add more XC20s.')
+    if (i == chain.xc20Samples.length) {
+        console.log('Need to add more XC20s.');
         return;
     }
     symbol = symbol || `TT${i}`;
@@ -31,7 +34,7 @@ async function addWrapping(chains, symbol, walletUnconnected, example) {
 
 module.exports = {
     addWrapping,
-}
+};
 
 if (require.main === module) {
     //0x8ff26335325ad2c33d87bf8be4a53f28abaac5cf654a42080bc2b91938b1281d
@@ -40,9 +43,10 @@ if (require.main === module) {
 
     const example = require(`./index.js`);
     const env = process.argv[2];
-    if(env == null || (env != 'testnet' && env != 'local')) throw new Error('Need to specify tesntet or local as an argument to this script.');
+    if (env == null || (env != 'testnet' && env != 'local'))
+        throw new Error('Need to specify tesntet or local as an argument to this script.');
     let temp;
-    if(env == 'local') {
+    if (env == 'local') {
         temp = require(`../info/local.json`);
     } else {
         try {
@@ -54,8 +58,7 @@ if (require.main === module) {
     const chains = temp;
     const symbol = process.argv[3];
 
-
-    addWrapping(chains, symbol, wallet, example).then(() =>{
+    addWrapping(chains, symbol, wallet, example).then(() => {
         setJSON(chains, './info/local.json');
     });
 }

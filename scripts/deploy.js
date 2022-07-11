@@ -1,10 +1,12 @@
 'use strict';
-require("dotenv").config();
-const { utils: { setJSON}, testnetInfo } = require('@axelar-network/axelar-local-dev');
-const {  Wallet, getDefaultProvider } = require('ethers');
+require('dotenv').config();
+const {
+    utils: { setJSON },
+    testnetInfo,
+} = require('@axelar-network/axelar-local-dev');
+const { Wallet, getDefaultProvider } = require('ethers');
 const { keccak256, defaultAbiCoder } = require('ethers/lib/utils');
 const { GasCostLogger } = require('./gasCosts');
-
 
 async function deploy(env, chains, wallet, example) {
     const chain = chains[0];
@@ -17,15 +19,16 @@ async function deploy(env, chains, wallet, example) {
 
 module.exports = {
     deploy,
-}
+};
 
 if (require.main === module) {
     const example = require(`./index.js`);
 
     const env = process.argv[2];
-    if(env == null || (env != 'testnet' && env != 'local')) throw new Error('Need to specify tesntet or local as an argument to this script.');
+    if (env == null || (env != 'testnet' && env != 'local'))
+        throw new Error('Need to specify tesntet or local as an argument to this script.');
     let temp;
-    if(env == 'local') {
+    if (env == 'local') {
         temp = require(`../info/local.json`);
     } else {
         try {
