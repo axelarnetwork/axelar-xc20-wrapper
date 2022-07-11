@@ -4,8 +4,8 @@ pragma solidity 0.8.9;
 
 import { ERC20Permit } from './ERC20Permit.sol';
 import { ERC20 } from './ERC20.sol';
-import {LocalAsset} from './interfaces/LocalAsset.sol';
-import {Permit} from './interfaces/Permit.sol';
+import { LocalAsset } from './interfaces/LocalAsset.sol';
+import { Permit } from './interfaces/Permit.sol';
 
 contract XC20Sample is LocalAsset, ERC20Permit {
     address public owner;
@@ -13,10 +13,10 @@ contract XC20Sample is LocalAsset, ERC20Permit {
     address public admin;
     address public freezer;
 
-    mapping (address => bool) public frozenAccounts;
+    mapping(address => bool) public frozenAccounts;
     bool public frozen;
 
-    constructor(address owner_, string memory name) ERC20Permit(name) ERC20('','',0) {
+    constructor(address owner_, string memory name) ERC20Permit(name) ERC20('', '', 0) {
         owner = owner_;
     }
 
@@ -72,6 +72,7 @@ contract XC20Sample is LocalAsset, ERC20Permit {
         // Does nothing because I didn't want to have to implement this.
         return true;
     }
+
     /**
      * @dev Unfreeze the entire asset operations
      * Selector: 1cddec19
@@ -93,7 +94,7 @@ contract XC20Sample is LocalAsset, ERC20Permit {
         owner = owner_;
         return true;
     }
-    
+
     /**
      * @dev Specify the issuer, admin and freezer of an asset
      * Selector: f8bf8e95
@@ -101,7 +102,11 @@ contract XC20Sample is LocalAsset, ERC20Permit {
      * @param admin_ address The address capable of burning tokens and unfreezing accounts/assets
      * @param freezer_ address The address capable of freezing accounts/asset
      */
-    function set_team(address issuer_, address admin_, address freezer_) external override returns (bool) {
+    function set_team(
+        address issuer_,
+        address admin_,
+        address freezer_
+    ) external override returns (bool) {
         if (msg.sender != owner) return false;
         issuer = issuer_;
         admin = admin_;
@@ -116,7 +121,11 @@ contract XC20Sample is LocalAsset, ERC20Permit {
      * @param symbol_ string The symbol of the asset
      * @param decimals_ uint8 The number of decimals of your asset
      */
-    function set_metadata(string calldata name_, string calldata symbol_, uint8 decimals_) external override returns (bool) {
+    function set_metadata(
+        string calldata name_,
+        string calldata symbol_,
+        uint8 decimals_
+    ) external override returns (bool) {
         if (msg.sender != owner) return false;
         name = name_;
         symbol = symbol_;

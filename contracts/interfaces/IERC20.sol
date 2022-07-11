@@ -8,13 +8,20 @@ pragma solidity 0.8.9;
 interface IERC20 {
     error InvalidAccount();
 
-    function symbol() external view returns (string memory);/**
+    function symbol() external view returns (string memory);
+
+    /**
      * @dev Returns the amount of tokens in existence.
      */
-    function decimals() external view returns (uint8);/**
+
+    function decimals() external view returns (uint8);
+
+    /**
      * @dev Returns the amount of tokens in existence.
      */
+
     function name() external view returns (string memory);
+
     /**
      * @dev Returns the amount of tokens in existence.
      */
