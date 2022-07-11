@@ -5,14 +5,14 @@ const {  Contract, Wallet, getDefaultProvider } = require('ethers');
 const { keccak256, defaultAbiCoder } = require('ethers/lib/utils');
 
 const XC20Wrapper = require('../artifacts/contracts/XC20Wrapper.sol/XC20Wrapper.json');
-const IERC20 = require('../artifacts/contracts/interfaces/IERC20.sol/IERC20.json');
+const ERC20 = require('../artifacts/contracts/ERC20.sol/ERC20.json');
 
 async function test(chains, args, unconnectedWallet, example) {
     const chain = chains[0];
     const provider = getDefaultProvider(chain.rpc);
-    const wallet = new Wallet(args[0], provider);
-    const usdc = new Contract('0xD1633F7Fb3d716643125d6415d4177bC36b7186b', IERC20.abi, wallet);
-    await usdc.transfer(unconnectedWallet.address, BigInt(3e6));
+    const wallet = unconnectedWallet.connect(provider);
+    const wrapped = new Contract('0xffFfFffeFd9d0bf45a2947A519a741c4b9E99EB6', ERC20.abi, wallet);
+    console.log(await wrapped.decimals());
 }
 
 module.exports = {
