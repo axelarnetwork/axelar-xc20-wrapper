@@ -8,11 +8,12 @@ const { Wallet, getDefaultProvider } = require('ethers');
 const { keccak256, defaultAbiCoder } = require('ethers/lib/utils');
 const { GasCostLogger } = require('./gasCosts');
 
-async function deploy(env, chains, wallet, example) {
+async function deploy(env, chains, wallet) {
+    const index = require(`./index.js`);
     const chain = chains[0];
     const rpc = chain.rpc;
     const provider = getDefaultProvider(rpc);
-    await example.deploy(chain, wallet.connect(provider));
+    await index.deploy(chain, wallet.connect(provider));
 
     setJSON(chains, `./info/${env}.json`);
 }
@@ -22,8 +23,6 @@ module.exports = {
 };
 
 if (require.main === module) {
-    const example = require(`./index.js`);
-
     const env = process.argv[2];
     if (env == null || (env != 'testnet' && env != 'local'))
         throw new Error('Need to specify tesntet or local as an argument to this script.');
@@ -43,5 +42,5 @@ if (require.main === module) {
     const private_key = keccak256(defaultAbiCoder.encode(['string'], [process.env.PRIVATE_KEY_GENERATOR]));
     const wallet = new Wallet(private_key);
 
-    deploy(env, chains, wallet, example);
+    deploy(env, chains, wallet);
 }

@@ -5,12 +5,12 @@ const { Wallet } = require('ethers');
 const { keccak256, defaultAbiCoder } = require('ethers/lib/utils');
 const index = require(`./index.js`);
 
-async function addLocalTokenPair(chain, walletUnconnected) {
-    return await index.addLocalTokenPair(chain, walletUnconnected);
+async function addLocalXc20(chain, walletUnconnected) {
+    await index.addLocalXc20(chain, walletUnconnected);
 }
 
 module.exports = {
-    addLocalTokenPair,
+    addLocalXc20,
 };
 
 if (require.main === module) {
@@ -19,7 +19,7 @@ if (require.main === module) {
 
     const chains = require(`../info/local.json`);
 
-    addLocalTokenPair(chains[0], wallet).then(() => {
+    addLocalXc20(chains[0], wallet).then(() => {
         setJSON(chains, './info/local.json');
     });
 }
