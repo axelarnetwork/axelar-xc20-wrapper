@@ -13,8 +13,9 @@ const { keccak256, defaultAbiCoder } = require('ethers/lib/utils');
 const XC20Wrapper = require('../artifacts/contracts/XC20Wrapper.sol/XC20Wrapper.json');
 const XC20Sample = require('../artifacts/contracts/XC20Sample.sol/XC20Sample.json');
 
-async function addWrapping(chains, symbol, walletUnconnected, example) {
-    const chain = chains[0];
+async function addWrapping(chain, symbol, walletUnconnected) {
+
+    const index = require(`./index.js`);
     const rpc = chain.rpc;
     const provider = getDefaultProvider(rpc);
     const wallet = walletUnconnected.connect(provider);
@@ -24,12 +25,11 @@ async function addWrapping(chains, symbol, walletUnconnected, example) {
         if ((await wrapper.unwrapped(chain.xc20Samples[i])) == AddressZero) break;
     }
     if (i == chain.xc20Samples.length) {
-        console.log('Need to add more XC20s.');
-        return;
+        throw new Error('Need to add more XC20s.');
     }
     symbol = symbol || `TT${i}`;
     console.log(`Adding wrapping for ${symbol} and ${chain.xc20Samples[i]}`);
-    await example.addToken(wrapper.address, symbol, chain.xc20Samples[i], wallet, BigInt(2e18));
+    await index.addToken(wrapper.address, symbol, chain.xc20Samples[i], wallet, BigInt(2e18));
 }
 
 module.exports = {
@@ -41,7 +41,6 @@ if (require.main === module) {
     const private_key = keccak256(defaultAbiCoder.encode(['string'], [process.env.PRIVATE_KEY_GENERATOR]));
     const wallet = new Wallet(private_key);
 
-    const example = require(`./index.js`);
     const env = process.argv[2];
     if (env == null || (env != 'testnet' && env != 'local'))
         throw new Error('Need to specify tesntet or local as an argument to this script.');
@@ -56,9 +55,11 @@ if (require.main === module) {
         }
     }
     const chains = temp;
+
+    const chain = chains[0];
     const symbol = process.argv[3];
 
-    addWrapping(chains, symbol, wallet, example).then(() => {
+    addWrapping(chain, symbol, wallet).then(() => {
         setJSON(chains, './info/local.json');
     });
 }

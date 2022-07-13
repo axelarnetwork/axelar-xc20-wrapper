@@ -16,12 +16,12 @@ const XC20Wrapper = require('../artifacts/contracts/XC20Wrapper.sol/XC20Wrapper.
 const XC20Sample = require('../artifacts/contracts/XC20Sample.sol/XC20Sample.json');
 const Proxy = require('../artifacts/contracts/Proxy.sol/Proxy.json');
 const IERC20 = require('../artifacts/contracts/interfaces/IERC20.sol/IERC20.json');
-const IAxelarGateway = require('../artifacts/@axelar-network/axelar-cgp-solidity/contracts/interfaces/IAxelarGateway.sol/IAxelarGateway.json');
+const IAxelarGateway = require('../artifacts/@axelar-network/axelar-utils-solidity/contracts/interfaces/IAxelarGateway.sol/IAxelarGateway.json');
 const { setJSON } = require('@axelar-network/axelar-local-dev/dist/utils');
 
 async function deploy(chain, wallet) {
     console.log(`Deploying XC20Wrapper for ${chain.name}.`);
-    const impl = await deployContract(wallet, XC20Wrapper, []);
+    const impl = await deployContract(wallet, XC20Wrapper, [chain.gateway]);
     console.log(`Deployed XC20Wrapper for ${chain.name} at ${impl.address}.`);
     console.log(`Deploying Proxy for ${chain.name}.`);
 
@@ -33,7 +33,7 @@ async function deploy(chain, wallet) {
     const proxy = await deployContract(wallet, Proxy, [
         impl.address,
         //0x9a289e138d67f0784b748f6f06b39ef6f9cfd5eba9f8467f55002494cf47d343
-        defaultAbiCoder.encode(['address', 'address', 'bytes32'], [chain.gateway, wallet.address, codeHash]),
+        defaultAbiCoder.encode(['address', 'bytes32'], [wallet.address, codeHash]),
     ]);
     chain.xc20Wrapper = proxy.address;
     console.log(`Deployed Proxy for ${chain.name} at ${proxy.address}.`);
@@ -68,12 +68,20 @@ async function upgrade(chain, wallet) {
 
 async function addToken(wrapperAddress, symbol, xc20Address, wallet, value) {
     const wrapper = new Contract(wrapperAddress, XC20Wrapper.abi, wallet);
-    console.log(await wrapper.unwrapped(xc20Address));
     await (
         await wrapper.addWrapping(symbol, xc20Address, 'X-USDC', 'xUSDC', {
             value: value,
         })
     ).wait();
+}
+
+async function addLocalXc20(chain, walletUnconnected) {
+    const provider = getDefaultProvider(chain.rpc);
+    const wallet = walletUnconnected.connect(provider);
+    console.log(`Deploying XC20Sample.`);
+    const xc20Sample = await deployContract(wallet, XC20Sample, [chain.xc20Wrapper, 'i trust this will hash chaotically']);
+    chain.xc20Samples.push(xc20Sample.address);
+    console.log(`Deployed XC20Sample for ${chain.name} at ${xc20Sample.address}.`);
 }
 
 async function addLocalTokenPair(chains, walletUnconnected) {
@@ -97,6 +105,7 @@ async function addLocalTokenPair(chains, walletUnconnected) {
         console.log(`Deployed [ ${name}, ${symbol}, ${decimals} ] at ${unwrapped.address}.`);
         await network.giveToken(wallet.address, symbol, BigInt(1e18));
     }
+    return symbol;
 }
 
 async function test(chains, unconnectedWallet, options) {
@@ -182,6 +191,7 @@ module.exports = {
     deploy,
     test,
     addLocalTokenPair,
+    addLocalXc20,
     addToken,
     upgrade,
 };
