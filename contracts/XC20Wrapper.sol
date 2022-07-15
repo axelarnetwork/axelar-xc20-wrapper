@@ -121,7 +121,7 @@ contract XC20Wrapper is AxelarExecutable, Upgradable {
         address receiver = abi.decode(payload, (address));
         address tokenAddress = gateway().tokenAddresses(tokenSymbol);
         address xc20 = wrapped[tokenAddress];
-        if (xc20 != address(0) || !LocalAsset(xc20).mint(receiver, amount)) {
+        if (xc20 == address(0) || !LocalAsset(xc20).mint(receiver, amount)) {
             _safeTransfer(tokenAddress, receiver, amount);
         }
     }
