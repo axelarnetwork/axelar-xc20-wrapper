@@ -40,69 +40,72 @@ const initialBalance = BigInt(1e18);
 
 setLogger((...args) => {});
 
-beforeEach(async () => {
-    const toFund = [deployer_address];
-    await createLocal(toFund, ['Moonbeam']);
-    chains = require('../info/local.json');
-    chain = chains[0];
-    provider = getDefaultProvider(chain.rpc);
-    wallet = new Wallet(deployer_key, provider);
-    await deploy('local', chains, wallet);
-    contract = new Contract(chain.xc20Wrapper, XC20Wrapper.abi, wallet);
-    await addLocalXc20(chain, wallet);
-    gateway = new Contract(chain.gateway, IAxelarGateway.abi, provider);
-    const usdcAddress = await gateway.tokenAddresses('aUSDC');
-    usdc = new Contract(usdcAddress, IERC20.abi, provider);
-});
-
-afterEach(async () => {
-    await stopAll();
-});
-
-describe('manage wrappings', () => {
-    it('should add a Wrapping', async () => {
-        await addWrapping(chain, 'aUSDC', wallet);
-        expect(await contract.wrapped(usdc.address)).to.equal(chain.xc20Samples[0]);
-        expect(await contract.unwrapped(chain.xc20Samples[0])).to.equal(usdc.address);
-    });
-    it('should add a pair and a wrapping', async () => {
-        await addWrapping(chain, 'aUSDC', wallet);
-        expect(await contract.wrapped(usdc.address)).to.equal(chain.xc20Samples[0]);
-        expect(await contract.unwrapped(chain.xc20Samples[0])).to.equal(usdc.address);
-        const symbol = await addLocalTokenPair(chains, wallet);
-        const tokenAddress = await gateway.tokenAddresses('TT1');
-        await addWrapping(chain, symbol, wallet);
-        expect(await contract.wrapped(tokenAddress)).to.equal(chain.xc20Samples[1]);
-        expect(await contract.unwrapped(chain.xc20Samples[1])).to.equal(tokenAddress);
-    });
-    it('should fail to add a second wrapping without another xc20', async () => {
-        await addWrapping(chain, 'aUSDC', wallet);
-        expect(addWrapping(chain, 'symbol', wallet)).to.be.rejectedWith(new Error('Need to add more XC20s.'));
-    });
-});
-
-describe('wrap/unwrap', () => {
-    let xc20;
+describe('XC20 Wrapper', () => {
     beforeEach(async () => {
-        await addWrapping(chain, 'aUSDC', wallet);
-        xc20 = new Contract(await contract.wrapped(usdc.address), XC20Sample.abi, wallet);
+        const toFund = [deployer_address];
+        await createLocal(toFund, ['Moonbeam']);
+        chains = require('../info/local.json');
+        chain = chains[0];
+        provider = getDefaultProvider(chain.rpc);
+        wallet = new Wallet(deployer_key, provider);
+        await deploy('local', chains, wallet);
+        contract = new Contract(chain.xc20Wrapper, XC20Wrapper.abi, wallet);
+        await addLocalXc20(chain, wallet);
+        gateway = new Contract(chain.gateway, IAxelarGateway.abi, provider);
+        const usdcAddress = await gateway.tokenAddresses('aUSDC');
+        usdc = new Contract(usdcAddress, IERC20.abi, provider);
     });
-    it('should wrap and unwrap', async () => {
-        const amountWrapped = BigInt(2e6);
-        const amountUnwrapped = BigInt(1e6);
-        expect(BigInt(await usdc.balanceOf(wallet.address))).to.equal(initialBalance);
-        expect(BigInt(await xc20.balanceOf(wallet.address))).to.equal(0n);
 
-        await (await usdc.connect(wallet).approve(contract.address, amountWrapped)).wait();
-        await (await contract.connect(wallet).wrap(usdc.address, amountWrapped)).wait();
+    afterEach(async () => {
+        await stopAll();
+    });
 
-        expect(BigInt(await usdc.balanceOf(wallet.address))).to.equal(initialBalance - amountWrapped);
-        expect(BigInt(await xc20.balanceOf(wallet.address))).to.equal(amountWrapped);
+    describe('manage wrappings', () => {
+        it('should add a Wrapping', async () => {
+            await addWrapping(chain, 'aUSDC', wallet);
+            expect(await contract.wrapped(usdc.address)).to.equal(chain.xc20Samples[0]);
+            expect(await contract.unwrapped(chain.xc20Samples[0])).to.equal(usdc.address);
+        });
+        it('should add a pair and a wrapping', async () => {
+            await addWrapping(chain, 'aUSDC', wallet);
+            expect(await contract.wrapped(usdc.address)).to.equal(chain.xc20Samples[0]);
+            expect(await contract.unwrapped(chain.xc20Samples[0])).to.equal(usdc.address);
+            const symbol = await addLocalTokenPair(chains, wallet);
+            console.log('here');
+            const tokenAddress = await gateway.tokenAddresses(symbol);
+            await addWrapping(chain, symbol, wallet);
+            expect(await contract.wrapped(tokenAddress)).to.equal(chain.xc20Samples[1]);
+            expect(await contract.unwrapped(chain.xc20Samples[1])).to.equal(tokenAddress);
+        });
+        it('should fail to add a second wrapping without another xc20', async () => {
+            await addWrapping(chain, 'aUSDC', wallet);
+            expect(addWrapping(chain, 'symbol', wallet)).to.be.rejectedWith(new Error('Need to add more XC20s.'));
+        });
+    });
 
-        await (await xc20.connect(wallet).approve(contract.address, amountUnwrapped)).wait();
-        await (await contract.connect(wallet).unwrap(xc20.address, amountUnwrapped)).wait();
+    describe('wrap/unwrap', () => {
+        let xc20;
+        beforeEach(async () => {
+            await addWrapping(chain, 'aUSDC', wallet);
+            xc20 = new Contract(await contract.wrapped(usdc.address), XC20Sample.abi, wallet);
+        });
+        it('should wrap and unwrap', async () => {
+            const amountWrapped = BigInt(2e6);
+            const amountUnwrapped = BigInt(1e6);
+            expect(BigInt(await usdc.balanceOf(wallet.address))).to.equal(initialBalance);
+            expect(BigInt(await xc20.balanceOf(wallet.address))).to.equal(0n);
 
-        expect(BigInt(await usdc.balanceOf(wallet.address))).to.equal(initialBalance - amountWrapped + amountUnwrapped);
-        expect(BigInt(await xc20.balanceOf(wallet.address))).to.equal(amountWrapped - amountUnwrapped);
+            await (await usdc.connect(wallet).approve(contract.address, amountWrapped)).wait();
+            await (await contract.connect(wallet).wrap(usdc.address, amountWrapped)).wait();
+
+            expect(BigInt(await usdc.balanceOf(wallet.address))).to.equal(initialBalance - amountWrapped);
+            expect(BigInt(await xc20.balanceOf(wallet.address))).to.equal(amountWrapped);
+
+            await (await xc20.connect(wallet).approve(contract.address, amountUnwrapped)).wait();
+            await (await contract.connect(wallet).unwrap(xc20.address, amountUnwrapped)).wait();
+
+            expect(BigInt(await usdc.balanceOf(wallet.address))).to.equal(initialBalance - amountWrapped + amountUnwrapped);
+            expect(BigInt(await xc20.balanceOf(wallet.address))).to.equal(amountWrapped - amountUnwrapped);
+        });
     });
 });

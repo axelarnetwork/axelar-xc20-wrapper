@@ -17,9 +17,8 @@ function getDepositAddress(env, source, destination, destinationAddress, symbol)
         });
         return sdk.getDepositAddress(source, destination, destinationAddress, listing[symbol]);
     }
- 
-        return axelarLocal.getDepositAddress(source, destination, destinationAddress, symbol, 8500);
-    
+
+    return axelarLocal.getDepositAddress(source, destination, destinationAddress, symbol, 8500);
 }
 
 async function getGasPrice(env, source, destination, tokenAddress) {

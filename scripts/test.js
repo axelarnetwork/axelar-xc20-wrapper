@@ -25,7 +25,7 @@ if (require.main === module) {
         throw new Error('Need to specify tesntet or local as an argument to this script.');
     let temp;
 
-    if (env ==='local') {
+    if (env === 'local') {
         temp = require(`../info/local.json`);
     } else {
         try {

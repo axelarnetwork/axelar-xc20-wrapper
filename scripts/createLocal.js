@@ -1,6 +1,4 @@
-const {
-    createAndExport,
-} = require('@axelar-network/axelar-local-dev');
+const { createAndExport } = require('@axelar-network/axelar-local-dev');
 const {
     Wallet,
     utils: { keccak256, defaultAbiCoder },
@@ -9,8 +7,11 @@ require('dotenv').config();
 
 async function createLocal(toFund, chains = null) {
     async function callback(chain, info) {
-        await chain.deployToken('Axelar Wrapped USDC', 'aUSDC', 6, BigInt(1e17));
-        for (const address of toFund) await chain.giveToken(address, 'aUSDC', BigInt(1e18));
+        await chain.deployToken('Axelar Wrapped USDC', 'aUSDC', 6, BigInt(1e70));
+        
+        for (const address of toFund) {
+            await chain.giveToken(address, 'aUSDC', BigInt(1e18));
+        }
     }
 
     await createAndExport({

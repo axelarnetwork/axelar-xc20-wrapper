@@ -94,12 +94,14 @@ async function addLocalTokenPair(chains, walletUnconnected) {
     const decimals = 13 + i;
 
     for (const chain of chains) {
+        console.log(chain.name);
         const provider = getDefaultProvider(chain.rpc);
         const wallet = walletUnconnected.connect(provider);
         const network = await getNetwork(chain.rpc);
-        const unwrapped = await network.deployToken(name, symbol, decimals, BigInt(1e30), AddressZero);
-        console.log(`Deployed [ ${name}, ${symbol}, ${decimals} ] at ${unwrapped.address}.`);
+        const unwrapped = await network.deployToken(name, symbol, decimals, BigInt(1e30));
+        console.log(`Deployed [ ${name}, ${symbol}, ${decimals} ] at ${unwrapped.address} for ${chain.name}.`);
         await network.giveToken(wallet.address, symbol, BigInt(1e18));
+        console.log('here');
     }
 
     return symbol;
