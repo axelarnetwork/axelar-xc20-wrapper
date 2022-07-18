@@ -28,6 +28,7 @@
     "@axelar-network/axelar-local-dev": "github:axelarnetwork/axelar-local-dev",
     "@axelar-network/axelar-utils-solidity": "github:axelarnetwork/axelar-utils-solidity",
     "chai": "^4.3.6",
+    "chai-as-promised": "^7.1.1",
     "eslint": "^8.17.0",
     "eslint-config-richardpringle": "^2.0.0",
     "hardhat-gas-reporter": "^1.0.8",

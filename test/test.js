@@ -9,24 +9,13 @@ const {
 } = require('ethers');
 
 const { expect } = chai;
+chai.use(require('chai-as-promised'))
 const {
-    createNetwork,
-    relay,
     stopAll,
-    getNetwork,
-    utils: { defaultAccounts, setLogger, deployContract },
-    setupNetwork,
-    getDepositAddress,
-    getFee,
-    listen,
-    forkNetwork,
-    mainnetInfo,
-    networks,
 } = require('@axelar-network/axelar-local-dev');
 
-setLogger((...args) => {});
 
-const { keccak256, toUtf8Bytes } = require('ethers/lib/utils');
+const { keccak256 } = require('ethers/lib/utils');
 
 const { createLocal } = require('../scripts/createLocal.js');
 const { deploy } = require('../scripts/deploy');
@@ -38,6 +27,7 @@ const XC20Wrapper = require('../artifacts/contracts/XC20Wrapper.sol/XC20Wrapper.
 const IERC20 = require('../artifacts/contracts/interfaces/IERC20.sol/IERC20.json');
 const IAxelarGateway = require('../artifacts/@axelar-network/axelar-utils-solidity/contracts/interfaces/IAxelarGateway.sol/IAxelarGateway.json');
 const XC20Sample = require('../artifacts/contracts/XC20Sample.sol/XC20Sample.json');
+const { setLogger } = require('@axelar-network/axelar-local-dev/dist/utils.js');
 
 const deployer_key = keccak256(defaultAbiCoder.encode(['string'], [process.env.PRIVATE_KEY_GENERATOR]));
 const deployer_address = new Wallet(deployer_key).address;
@@ -47,7 +37,11 @@ let provider;
 let wallet;
 let chains;
 let chain;
+let gateway;
+let usdc;
 const initialBalance = BigInt(1e18);
+
+setLogger((...args) => {});
 
 beforeEach(async () => {
     const toFund = [deployer_address];
@@ -59,6 +53,9 @@ beforeEach(async () => {
     await deploy('local', chains, wallet);
     contract = new Contract(chain.xc20Wrapper, XC20Wrapper.abi, wallet);
     await addLocalXc20(chain, wallet);
+    gateway = new Contract(chain.gateway, IAxelarGateway.abi, provider);
+    const usdcAddress = await gateway.tokenAddresses('aUSDC');
+    usdc = new Contract(usdcAddress, IERC20.abi, provider);
 });
 
 afterEach(async () => {
@@ -68,24 +65,33 @@ afterEach(async () => {
 describe('manage wrappings', () => {
     it('should add a Wrapping', async () => {
         await addWrapping(chain, 'aUSDC', wallet);
+        expect(await contract.wrapped(usdc.address)).to.equal(chain.xc20Samples[0]);
+        expect(await contract.unwrapped(chain.xc20Samples[0])).to.equal(usdc.address);
+        
     });
     it('should add a pair and a wrapping', async () => {
         await addWrapping(chain, 'aUSDC', wallet);
+        expect(await contract.wrapped(usdc.address)).to.equal(chain.xc20Samples[0]);
+        expect(await contract.unwrapped(chain.xc20Samples[0])).to.equal(usdc.address);
         const symbol = await addLocalTokenPair(chains, wallet);
-
+        const tokenAddress = await gateway.tokenAddresses('TT1')
         await addWrapping(chain, symbol, wallet);
+        expect(await contract.wrapped(tokenAddress)).to.equal(chain.xc20Samples[1]);
+        expect(await contract.unwrapped(chain.xc20Samples[1])).to.equal(tokenAddress);
+    });
+    it('should fail to add a second wrapping without another xc20', async () => {
+        await addWrapping(chain, 'aUSDC', wallet);
+        expect(
+            addWrapping(chain, 'symbol', wallet)
+        ).to.be.rejectedWith(new Error('Need to add more XC20s.'));
     });
 });
 
 describe('wrap/unwrap', () => {
-    let usdc;
     let xc20;
     beforeEach(async() => {
         await addWrapping(chain, 'aUSDC', wallet);
-        const gateway = new Contract(chain.gateway, IAxelarGateway.abi, provider);
-        const usdcAddress = await gateway.tokenAddresses('aUSDC');
-        usdc = new Contract(usdcAddress, IERC20.abi, provider);
-        xc20 = new Contract(await contract.wrapped(usdcAddress), XC20Sample.abi, wallet);
+        xc20 = new Contract(await contract.wrapped(usdc.address), XC20Sample.abi, wallet);
     });
     it('should wrap and unwrap', async () => {
         const amountWrapped = BigInt(2e6);
