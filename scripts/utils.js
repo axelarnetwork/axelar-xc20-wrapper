@@ -1,8 +1,5 @@
 const {
-    Contract,
-    ContractFactory,
     constants: { AddressZero },
-    utils: { keccak256, defaultAbiCoder },
 } = require('ethers');
 const axios = require('axios');
 const axelarLocal = require('@axelar-network/axelar-local-dev');
@@ -10,7 +7,7 @@ const axelarLocal = require('@axelar-network/axelar-local-dev');
 const { AxelarAssetTransfer } = require('@axelar-network/axelarjs-sdk');
 
 function getDepositAddress(env, source, destination, destinationAddress, symbol) {
-    if (env == 'testnet') {
+    if (env === 'testnet') {
         const listing = {
             aUSDC: 'uusdc',
         };
@@ -19,17 +16,18 @@ function getDepositAddress(env, source, destination, destinationAddress, symbol)
             auth: 'local',
         });
         return sdk.getDepositAddress(source, destination, destinationAddress, listing[symbol]);
-    } else {
-        return axelarLocal.getDepositAddress(source, destination, destinationAddress, symbol, 8500);
     }
+ 
+        return axelarLocal.getDepositAddress(source, destination, destinationAddress, symbol, 8500);
+    
 }
 
 async function getGasPrice(env, source, destination, tokenAddress) {
-    if (env == 'local') return 1;
-    if (env != 'testnet') throw Error('env needs to be "local" or "testnet".');
-    const api_url = 'https://devnet.api.gmp.axelarscan.io';
+    if (env === 'local') return 1;
+    if (env !== 'testnet') throw Error('env needs to be "local" or "testnet".');
+    const apiUrl = 'https://devnet.api.gmp.axelarscan.io';
 
-    const requester = axios.create({ baseURL: api_url });
+    const requester = axios.create({ baseURL: apiUrl });
     const params = {
         method: 'getGasPrice',
         destinationChain: destination.name,
@@ -37,11 +35,12 @@ async function getGasPrice(env, source, destination, tokenAddress) {
     };
 
     // set gas token address to params
-    if (tokenAddress != AddressZero) {
+    if (tokenAddress !== AddressZero) {
         params.sourceTokenAddress = tokenAddress;
     } else {
         params.sourceTokenSymbol = source.tokenSymbol;
     }
+
     // send request
     const response = await requester.get('/', { params }).catch((error) => {
         return { data: { error } };

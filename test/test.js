@@ -9,11 +9,8 @@ const {
 } = require('ethers');
 
 const { expect } = chai;
-chai.use(require('chai-as-promised'))
-const {
-    stopAll,
-} = require('@axelar-network/axelar-local-dev');
-
+chai.use(require('chai-as-promised'));
+const { stopAll } = require('@axelar-network/axelar-local-dev');
 
 const { keccak256 } = require('ethers/lib/utils');
 
@@ -47,7 +44,7 @@ beforeEach(async () => {
     const toFund = [deployer_address];
     await createLocal(toFund, ['Moonbeam']);
     chains = require('../info/local.json');
-    chain = chains[0]
+    chain = chains[0];
     provider = getDefaultProvider(chain.rpc);
     wallet = new Wallet(deployer_key, provider);
     await deploy('local', chains, wallet);
@@ -60,56 +57,52 @@ beforeEach(async () => {
 
 afterEach(async () => {
     await stopAll();
-})
+});
 
 describe('manage wrappings', () => {
     it('should add a Wrapping', async () => {
         await addWrapping(chain, 'aUSDC', wallet);
         expect(await contract.wrapped(usdc.address)).to.equal(chain.xc20Samples[0]);
         expect(await contract.unwrapped(chain.xc20Samples[0])).to.equal(usdc.address);
-        
     });
     it('should add a pair and a wrapping', async () => {
         await addWrapping(chain, 'aUSDC', wallet);
         expect(await contract.wrapped(usdc.address)).to.equal(chain.xc20Samples[0]);
         expect(await contract.unwrapped(chain.xc20Samples[0])).to.equal(usdc.address);
         const symbol = await addLocalTokenPair(chains, wallet);
-        const tokenAddress = await gateway.tokenAddresses('TT1')
+        const tokenAddress = await gateway.tokenAddresses('TT1');
         await addWrapping(chain, symbol, wallet);
         expect(await contract.wrapped(tokenAddress)).to.equal(chain.xc20Samples[1]);
         expect(await contract.unwrapped(chain.xc20Samples[1])).to.equal(tokenAddress);
     });
     it('should fail to add a second wrapping without another xc20', async () => {
         await addWrapping(chain, 'aUSDC', wallet);
-        expect(
-            addWrapping(chain, 'symbol', wallet)
-        ).to.be.rejectedWith(new Error('Need to add more XC20s.'));
+        expect(addWrapping(chain, 'symbol', wallet)).to.be.rejectedWith(new Error('Need to add more XC20s.'));
     });
 });
 
 describe('wrap/unwrap', () => {
     let xc20;
-    beforeEach(async() => {
+    beforeEach(async () => {
         await addWrapping(chain, 'aUSDC', wallet);
         xc20 = new Contract(await contract.wrapped(usdc.address), XC20Sample.abi, wallet);
     });
     it('should wrap and unwrap', async () => {
         const amountWrapped = BigInt(2e6);
         const amountUnwrapped = BigInt(1e6);
-        expect(BigInt(await usdc.balanceOf(wallet.address))).to.equal(initialBalance); 
-        expect(BigInt(await xc20.balanceOf(wallet.address))).to.equal(0n); 
+        expect(BigInt(await usdc.balanceOf(wallet.address))).to.equal(initialBalance);
+        expect(BigInt(await xc20.balanceOf(wallet.address))).to.equal(0n);
 
         await (await usdc.connect(wallet).approve(contract.address, amountWrapped)).wait();
         await (await contract.connect(wallet).wrap(usdc.address, amountWrapped)).wait();
-        
-        expect(BigInt(await usdc.balanceOf(wallet.address))).to.equal(initialBalance - amountWrapped);
-        expect(BigInt(await xc20.balanceOf(wallet.address))).to.equal(amountWrapped); 
 
+        expect(BigInt(await usdc.balanceOf(wallet.address))).to.equal(initialBalance - amountWrapped);
+        expect(BigInt(await xc20.balanceOf(wallet.address))).to.equal(amountWrapped);
 
         await (await xc20.connect(wallet).approve(contract.address, amountUnwrapped)).wait();
         await (await contract.connect(wallet).unwrap(xc20.address, amountUnwrapped)).wait();
 
         expect(BigInt(await usdc.balanceOf(wallet.address))).to.equal(initialBalance - amountWrapped + amountUnwrapped);
-        expect(BigInt(await xc20.balanceOf(wallet.address))).to.equal(amountWrapped - amountUnwrapped); 
+        expect(BigInt(await xc20.balanceOf(wallet.address))).to.equal(amountWrapped - amountUnwrapped);
     });
 });

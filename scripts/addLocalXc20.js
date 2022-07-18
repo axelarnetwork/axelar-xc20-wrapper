@@ -14,8 +14,8 @@ module.exports = {
 };
 
 if (require.main === module) {
-    const private_key = keccak256(defaultAbiCoder.encode(['string'], [process.env.PRIVATE_KEY_GENERATOR]));
-    const wallet = new Wallet(private_key);
+    const privateKey = keccak256(defaultAbiCoder.encode(['string'], [process.env.PRIVATE_KEY_GENERATOR]));
+    const wallet = new Wallet(privateKey);
 
     const chains = require(`../info/local.json`);
 
