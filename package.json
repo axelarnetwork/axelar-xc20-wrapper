@@ -10,7 +10,7 @@
     "build": "rm -rf artifacts && hardhat compile",
     "test": "hardhat test",
     "lint": "solhint 'contracts/**/*.sol' && eslint 'scripts/**/*.js'",
-    "prettier": "prettier --write 'contracts/**/*.sol' 'scripts/**/*.js' '*.js' 'test/**/*.js' && prettier --write 'test/**/*.js'",
+    "prettier": "prettier --write 'contracts/**/*.sol' 'scripts/**/*.js' '*.js' 'test/**/*.js'",
     "flatten": "sh scripts/flatten-contracts.sh"
   },
   "keywords": [],
