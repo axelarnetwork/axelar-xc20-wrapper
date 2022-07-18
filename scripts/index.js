@@ -107,7 +107,6 @@ async function addLocalTokenPair(chains, walletUnconnected) {
 
 module.exports = {
     deploy,
-    test,
     addLocalTokenPair,
     addLocalXc20,
     addToken,

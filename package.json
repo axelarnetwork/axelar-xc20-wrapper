@@ -9,7 +9,6 @@
   "scripts": {
     "build": "rm -rf artifacts && hardhat compile",
     "test": "hardhat test",
-    "test-evm-versions": "bash test-evm-versions.bash",
     "lint": "solhint 'contracts/**/*.sol' && eslint 'scripts/**/*.js'",
     "prettier": "prettier --write 'contracts/**/*.sol' 'scripts/**/*.js' '*.js' 'test/**/*.js' && prettier --write 'test/**/*.js'",
     "flatten": "sh scripts/flatten-contracts.sh"
@@ -27,6 +26,7 @@
   "devDependencies": {
     "@axelar-network/axelar-local-dev": "github:axelarnetwork/axelar-local-dev",
     "@axelar-network/axelar-utils-solidity": "github:axelarnetwork/axelar-utils-solidity",
+    "@nomiclabs/hardhat-ethers": "^2.1.0",
     "chai": "^4.3.6",
     "chai-as-promised": "^7.1.1",
     "eslint": "^8.17.0",
