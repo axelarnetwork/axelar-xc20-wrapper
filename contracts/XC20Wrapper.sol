@@ -27,7 +27,7 @@ contract XC20Wrapper is AxelarExecutable, Upgradable {
         gatewayAddress = gatewayAddress_;
     }
 
-    function gateway() public view override returns(IAxelarGateway) {
+    function gateway() public view override returns (IAxelarGateway) {
         return IAxelarGateway(gatewayAddress);
     }
 
@@ -58,8 +58,8 @@ contract XC20Wrapper is AxelarExecutable, Upgradable {
         if (unwrapped[xc20Token] != address(0)) revert('AlreadyWrappingXC20Token()');
         wrapped[axelarToken] = xc20Token;
         unwrapped[xc20Token] = axelarToken;
-        if(!LocalAsset(xc20Token).set_team(address(this), address(this), address(this))) revert('NotOwner()');
-        if(!LocalAsset(xc20Token).set_metadata(newName, newSymbol, IERC20(axelarToken).decimals())) revert('CannotSetMetadata()');
+        if (!LocalAsset(xc20Token).set_team(address(this), address(this), address(this))) revert('NotOwner()');
+        if (!LocalAsset(xc20Token).set_metadata(newName, newSymbol, IERC20(axelarToken).decimals())) revert('CannotSetMetadata()');
         payable(msg.sender).transfer(address(this).balance);
     }
 
@@ -76,14 +76,14 @@ contract XC20Wrapper is AxelarExecutable, Upgradable {
         _safeTransferFrom(axelarToken, msg.sender, amount);
         address wrappedToken = wrapped[axelarToken];
         if (wrappedToken == address(0)) revert('NotAxelarToken()');
-        if(!LocalAsset(wrappedToken).mint(msg.sender, amount)) revert('CannotMint()');
+        if (!LocalAsset(wrappedToken).mint(msg.sender, amount)) revert('CannotMint()');
     }
 
     function unwrap(address wrappedToken, uint256 amount) external {
         address axelarToken = unwrapped[wrappedToken];
         if (axelarToken == address(0)) revert('NotXc20Token()');
         if (IERC20(wrappedToken).balanceOf(msg.sender) < amount) revert('InsufficientBalance()');
-        if(!LocalAsset(wrappedToken).burn(msg.sender, amount)) revert('CannotBurn()');
+        if (!LocalAsset(wrappedToken).burn(msg.sender, amount)) revert('CannotBurn()');
         _safeTransfer(axelarToken, msg.sender, amount);
     }
 

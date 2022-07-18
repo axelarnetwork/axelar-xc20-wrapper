@@ -14,7 +14,6 @@ const XC20Wrapper = require('../artifacts/contracts/XC20Wrapper.sol/XC20Wrapper.
 const XC20Sample = require('../artifacts/contracts/XC20Sample.sol/XC20Sample.json');
 
 async function addWrapping(chain, symbol, walletUnconnected) {
-
     const index = require(`./index.js`);
     const rpc = chain.rpc;
     const provider = getDefaultProvider(rpc);
