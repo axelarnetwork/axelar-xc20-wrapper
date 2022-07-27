@@ -13,7 +13,6 @@ async function createLocal(toFund, chains = null) {
             await chain.giveToken(address, 'aUSDC', BigInt(1e18));
         }
     }
-
     await createAndExport({
         chainOutputPath: './info/local.json',
         accountsToFund: toFund,
@@ -27,7 +26,7 @@ module.exports = {
 };
 
 if (require.main === module) {
-    const deployerKey = keccak256(defaultAbiCoder.encode(['string'], [process.env.privateKey_GENERATOR]));
+    const deployerKey = keccak256(defaultAbiCoder.encode(['string'], [process.env.PRIVATE_KEY_GENERATOR]));
     const deployerAddress = new Wallet(deployerKey).address;
 
     const toFund = [deployerAddress];

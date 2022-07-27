@@ -17,8 +17,11 @@ To deploy the contracts:
 node scripts/deploy local
 ```
 
-To test the contracts (you need to redeploy every 5 tests):
+To test the contracts:
 
 ```
-node scripts/test local
+node scripts/addLocalXc20.js local  
+node scripts/addWrapping local aUSDC
 ```
+
+See [test.js](test/test.js) for more in-depth tests.
