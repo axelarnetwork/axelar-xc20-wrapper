@@ -112,10 +112,10 @@ contract XC20Wrapper is AxelarExecutable, Upgradable {
     }
 
     function _executeWithToken(
-        string memory,
-        string memory,
+        string calldata,
+        string calldata,
         bytes calldata payload,
-        string memory tokenSymbol,
+        string calldata tokenSymbol,
         uint256 amount
     ) internal override {
         address receiver = abi.decode(payload, (address));

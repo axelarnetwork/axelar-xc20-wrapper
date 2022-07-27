@@ -101,7 +101,6 @@ async function addLocalTokenPair(chains, walletUnconnected) {
         const unwrapped = await network.deployToken(name, symbol, decimals, BigInt(1e30));
         console.log(`Deployed [ ${name}, ${symbol}, ${decimals} ] at ${unwrapped.address} for ${chain.name}.`);
         await network.giveToken(wallet.address, symbol, BigInt(1e18));
-        console.log('here');
     }
 
     return symbol;
