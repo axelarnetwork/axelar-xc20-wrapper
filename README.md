@@ -5,6 +5,8 @@ npm i
 npm run build
 ```
 
+Add a string for PRIVATE_KEY_GENERATOR to `.env` to get your own private key.
+
 To create a local Moonbeam (on a separate terminal):
 
 ```
