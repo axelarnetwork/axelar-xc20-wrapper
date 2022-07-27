@@ -13,6 +13,7 @@ async function createLocal(toFund, chains = null) {
             await chain.giveToken(address, 'aUSDC', BigInt(1e18));
         }
     }
+    
     await createAndExport({
         chainOutputPath: './info/local.json',
         accountsToFund: toFund,
