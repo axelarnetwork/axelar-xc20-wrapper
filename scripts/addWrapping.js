@@ -11,22 +11,23 @@ const {
 const { keccak256, defaultAbiCoder } = require('ethers/lib/utils');
 
 const XC20Wrapper = require('../artifacts/contracts/XC20Wrapper.sol/XC20Wrapper.json');
-const XC20Sample = require('../artifacts/contracts/XC20Sample.sol/XC20Sample.json');
 
 async function addWrapping(chain, symbol, walletUnconnected) {
-
     const index = require(`./index.js`);
     const rpc = chain.rpc;
     const provider = getDefaultProvider(rpc);
     const wallet = walletUnconnected.connect(provider);
     const wrapper = new Contract(chain.xc20Wrapper, XC20Wrapper.abi, wallet);
     let i;
+
     for (i = 0; i < chain.xc20Samples.length; i++) {
-        if ((await wrapper.unwrapped(chain.xc20Samples[i])) == AddressZero) break;
+        if ((await wrapper.unwrapped(chain.xc20Samples[i])) === AddressZero) break;
     }
-    if (i == chain.xc20Samples.length) {
+
+    if (i === chain.xc20Samples.length) {
         throw new Error('Need to add more XC20s.');
     }
+
     symbol = symbol || `TT${i}`;
     console.log(`Adding wrapping for ${symbol} and ${chain.xc20Samples[i]}`);
     await index.addToken(wrapper.address, symbol, chain.xc20Samples[i], wallet, BigInt(2e18));
@@ -37,15 +38,15 @@ module.exports = {
 };
 
 if (require.main === module) {
-    //0x8ff26335325ad2c33d87bf8be4a53f28abaac5cf654a42080bc2b91938b1281d
-    const private_key = keccak256(defaultAbiCoder.encode(['string'], [process.env.PRIVATE_KEY_GENERATOR]));
-    const wallet = new Wallet(private_key);
+    const privateKey = keccak256(defaultAbiCoder.encode(['string'], [process.env.PRIVATE_KEY_GENERATOR]));
+    const wallet = new Wallet(privateKey);
 
     const env = process.argv[2];
-    if (env == null || (env != 'testnet' && env != 'local'))
+    if (env === null || (env !== 'testnet' && env !== 'local'))
         throw new Error('Need to specify tesntet or local as an argument to this script.');
     let temp;
-    if (env == 'local') {
+
+    if (env === 'local') {
         temp = require(`../info/local.json`);
     } else {
         try {
@@ -54,6 +55,7 @@ if (require.main === module) {
             temp = testnetInfo;
         }
     }
+
     const chains = temp;
 
     const chain = chains[0];
