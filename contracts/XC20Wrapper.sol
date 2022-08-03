@@ -6,7 +6,7 @@ import { IERC20 } from './interfaces/IERC20.sol';
 import { AxelarExecutable } from '@axelar-network/axelar-utils-solidity/contracts/executables/AxelarExecutable.sol';
 import { IAxelarGateway } from '@axelar-network/axelar-utils-solidity/contracts/interfaces/IAxelarGateway.sol';
 import { Upgradable} from './Upgradable.sol';
-import { LocalAsset } from './interfaces/LocalAsset.sol';
+import { IXC20 } from './interfaces/IXC20.sol';
 import { IXC20Wrapper } from './interfaces/IXC20Wrapper.sol';
 
 contract XC20Wrapper is IXC20Wrapper, AxelarExecutable, Upgradable {
@@ -48,8 +48,8 @@ contract XC20Wrapper is IXC20Wrapper, AxelarExecutable, Upgradable {
         if (xc20ToAxelarToken[xc20Token] != address(0)) revert('AlreadyWrappingXC20Token()');
         axelarTokenToXc20[axelarToken] = xc20Token;
         xc20ToAxelarToken[xc20Token] = axelarToken;
-        if (!LocalAsset(xc20Token).set_team(address(this), address(this), address(this))) revert('NotOwner()');
-        if (!LocalAsset(xc20Token).set_metadata(newName, newSymbol, IERC20(axelarToken).decimals())) revert('CannotSetMetadata()');
+        if (!IXC20(xc20Token).set_team(address(this), address(this), address(this))) revert('NotOwner()');
+        if (!IXC20(xc20Token).set_metadata(newName, newSymbol, IERC20(axelarToken).decimals())) revert('CannotSetMetadata()');
         payable(msg.sender).transfer(address(this).balance);
         emit AddedMapping(symbol, xc20Token, newName, newSymbol);
     }
@@ -68,14 +68,14 @@ contract XC20Wrapper is IXC20Wrapper, AxelarExecutable, Upgradable {
         _safeTransferFrom(axelarToken, msg.sender, amount);
         address xc20 = axelarTokenToXc20[axelarToken];
         if (xc20 == address(0)) revert('NotAxelarToken()');
-        if (!LocalAsset(xc20).mint(msg.sender, amount)) revert('CannotMint()');
+        if (!IXC20(xc20).mint(msg.sender, amount)) revert('CannotMint()');
     }
 
     function unwrap(address xc20, uint256 amount) external {
         address axelarToken = xc20ToAxelarToken[xc20];
         if (axelarToken == address(0)) revert('NotXc20Token()');
-        if (IERC20(xc20).balanceOf(msg.sender) < amount) revert('InsufficientBalance()');
-        if (!LocalAsset(xc20).burn(msg.sender, amount)) revert('CannotBurn()');
+        if (IXC20(xc20).balanceOf(msg.sender) < amount) revert('InsufficientBalance()');
+        if (!IXC20(xc20).burn(msg.sender, amount)) revert('CannotBurn()');
         _safeTransfer(axelarToken, msg.sender, amount);
     }
 
@@ -113,7 +113,7 @@ contract XC20Wrapper is IXC20Wrapper, AxelarExecutable, Upgradable {
         address receiver = abi.decode(payload, (address));
         address tokenAddress = gateway().tokenAddresses(tokenSymbol);
         address xc20 = axelarTokenToXc20[tokenAddress];
-        if (xc20 == address(0) || !LocalAsset(xc20).mint(receiver, amount)) {
+        if (xc20 == address(0) || !IXC20(xc20).mint(receiver, amount)) {
             _safeTransfer(tokenAddress, receiver, amount);
         }
     }
