@@ -16,7 +16,7 @@ const { keccak256 } = require('ethers/lib/utils');
 
 const { createLocal } = require('../scripts/createLocal.js');
 const { deploy } = require('../scripts/deploy');
-const { addWrapping } = require('../scripts/addWrapping');
+const { addMapping } = require('../scripts/addMapping');
 const { addLocalTokenPair } = require('../scripts/addLocalTokenPair');
 const { addLocalXc20 } = require('../scripts/addLocalXc20');
 
@@ -63,32 +63,32 @@ describe('XC20 Wrapper', () => {
 
     describe('manage wrappings', () => {
         it('should add a Wrapping', async () => {
-            await addWrapping(chain, 'aUSDC', wallet);
-            expect(await contract.wrapped(usdc.address)).to.equal(chain.xc20Samples[0]);
-            expect(await contract.unwrapped(chain.xc20Samples[0])).to.equal(usdc.address);
+            await addMapping(chain, 'aUSDC', wallet);
+            expect(await contract.axelarTokenToXc20(usdc.address)).to.equal(chain.xc20Samples[0]);
+            expect(await contract.xc20ToAxelarToken(chain.xc20Samples[0])).to.equal(usdc.address);
         });
         it('should add a pair and a wrapping', async () => {
-            await addWrapping(chain, 'aUSDC', wallet);
-            expect(await contract.wrapped(usdc.address)).to.equal(chain.xc20Samples[0]);
-            expect(await contract.unwrapped(chain.xc20Samples[0])).to.equal(usdc.address);
+            await addMapping(chain, 'aUSDC', wallet);
+            expect(await contract.axelarTokenToXc20(usdc.address)).to.equal(chain.xc20Samples[0]);
+            expect(await contract.xc20ToAxelarToken(chain.xc20Samples[0])).to.equal(usdc.address);
             const symbol = await addLocalTokenPair(chains, wallet);
             
             const tokenAddress = await gateway.tokenAddresses(symbol);
-            await addWrapping(chain, symbol, wallet);
-            expect(await contract.wrapped(tokenAddress)).to.equal(chain.xc20Samples[1]);
-            expect(await contract.unwrapped(chain.xc20Samples[1])).to.equal(tokenAddress);
+            await addMapping(chain, symbol, wallet);
+            expect(await contract.axelarTokenToXc20(tokenAddress)).to.equal(chain.xc20Samples[1]);
+            expect(await contract.xc20ToAxelarToken(chain.xc20Samples[1])).to.equal(tokenAddress);
         });
         it('should fail to add a second wrapping without another xc20', async () => {
-            await addWrapping(chain, 'aUSDC', wallet);
-            expect(addWrapping(chain, 'symbol', wallet)).to.be.rejectedWith(new Error('Need to add more XC20s.'));
+            await addMapping(chain, 'aUSDC', wallet);
+            expect(addMapping(chain, 'symbol', wallet)).to.be.rejectedWith(new Error('Need to add more XC20s.'));
         });
     });
 
     describe('wrap/unwrap', () => {
         let xc20;
         beforeEach(async () => {
-            await addWrapping(chain, 'aUSDC', wallet);
-            xc20 = new Contract(await contract.wrapped(usdc.address), XC20Sample.abi, wallet);
+            await addMapping(chain, 'aUSDC', wallet);
+            xc20 = new Contract(await contract.axelarTokenToXc20(usdc.address), XC20Sample.abi, wallet);
         });
         it('should wrap and unwrap', async () => {
             const amountWrapped = BigInt(2e6);

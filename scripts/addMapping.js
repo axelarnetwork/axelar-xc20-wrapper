@@ -12,7 +12,7 @@ const { keccak256, defaultAbiCoder } = require('ethers/lib/utils');
 
 const XC20Wrapper = require('../artifacts/contracts/XC20Wrapper.sol/XC20Wrapper.json');
 
-async function addWrapping(chain, symbol, walletUnconnected) {
+async function addMapping(chain, symbol, walletUnconnected) {
     const index = require(`./index.js`);
     const rpc = chain.rpc;
     const provider = getDefaultProvider(rpc);
@@ -21,7 +21,7 @@ async function addWrapping(chain, symbol, walletUnconnected) {
     let i;
 
     for (i = 0; i < chain.xc20Samples.length; i++) {
-        if ((await wrapper.unwrapped(chain.xc20Samples[i])) === AddressZero) break;
+        if ((await wrapper.xc20ToAxelarToken(chain.xc20Samples[i])) === AddressZero) break;
     }
 
     if (i === chain.xc20Samples.length) {
@@ -34,7 +34,7 @@ async function addWrapping(chain, symbol, walletUnconnected) {
 }
 
 module.exports = {
-    addWrapping,
+    addMapping,
 };
 
 if (require.main === module) {
@@ -61,7 +61,7 @@ if (require.main === module) {
     const chain = chains[0];
     const symbol = process.argv[3];
 
-    addWrapping(chain, symbol, wallet).then(() => {
+    addMapping(chain, symbol, wallet).then(() => {
         setJSON(chains, './info/local.json');
     });
 }

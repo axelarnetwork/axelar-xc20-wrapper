@@ -65,7 +65,7 @@ async function upgrade(chain, wallet) {
 async function addToken(wrapperAddress, symbol, xc20Address, wallet, value) {
     const wrapper = new Contract(wrapperAddress, XC20Wrapper.abi, wallet);
     await (
-        await wrapper.addWrapping(symbol, xc20Address, 'X-USDC', 'xUSDC', {
+        await wrapper.addMapping(symbol, xc20Address, 'X-USDC', 'xUSDC', {
             value,
         })
     ).wait();
