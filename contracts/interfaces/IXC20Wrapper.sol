@@ -10,6 +10,12 @@ interface IXC20Wrapper {
     error AlreadyWrappingAxelarToken();
     error AlreadyWrappingXC20Token();
     error NotOwnerOfXc20();
+    error CannotSetMetadata();
+    error CannotMint();
+    error CannotBurn();
+    error NotWrappingToken();
+    error CouldNotSendGLMR();
+    error ZeroAddress();
 
     event Wrapped(address indexed axelarToken, address indexed xc20, uint256 amount);
     event Unwrapped(address indexed xc20, address indexed axelarToken, uint256 amount);
