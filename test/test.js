@@ -16,7 +16,7 @@ const { keccak256 } = require('ethers/lib/utils');
 
 const { createLocal } = require('../scripts/createLocal.js');
 const { deploy } = require('../scripts/deploy');
-const { addWrapping } = require('../scripts/addWrapping');
+const { addMapping } = require('../scripts/addMapping');
 const { addLocalTokenPair } = require('../scripts/addLocalTokenPair');
 const { addLocalXc20 } = require('../scripts/addLocalXc20');
 
@@ -63,32 +63,32 @@ describe('XC20 Wrapper', () => {
 
     describe('manage wrappings', () => {
         it('should add a Wrapping', async () => {
-            await addWrapping(chain, 'aUSDC', wallet);
-            expect(await contract.wrapped(usdc.address)).to.equal(chain.xc20Samples[0]);
-            expect(await contract.unwrapped(chain.xc20Samples[0])).to.equal(usdc.address);
+            await addMapping(chain, 'aUSDC', wallet);
+            expect(await contract.axelarTokenToXc20(usdc.address)).to.equal(chain.xc20Samples[0]);
+            expect(await contract.xc20ToAxelarToken(chain.xc20Samples[0])).to.equal(usdc.address);
         });
         it('should add a pair and a wrapping', async () => {
-            await addWrapping(chain, 'aUSDC', wallet);
-            expect(await contract.wrapped(usdc.address)).to.equal(chain.xc20Samples[0]);
-            expect(await contract.unwrapped(chain.xc20Samples[0])).to.equal(usdc.address);
+            await addMapping(chain, 'aUSDC', wallet);
+            expect(await contract.axelarTokenToXc20(usdc.address)).to.equal(chain.xc20Samples[0]);
+            expect(await contract.xc20ToAxelarToken(chain.xc20Samples[0])).to.equal(usdc.address);
             const symbol = await addLocalTokenPair(chains, wallet);
-            
+
             const tokenAddress = await gateway.tokenAddresses(symbol);
-            await addWrapping(chain, symbol, wallet);
-            expect(await contract.wrapped(tokenAddress)).to.equal(chain.xc20Samples[1]);
-            expect(await contract.unwrapped(chain.xc20Samples[1])).to.equal(tokenAddress);
+            await addMapping(chain, symbol, wallet);
+            expect(await contract.axelarTokenToXc20(tokenAddress)).to.equal(chain.xc20Samples[1]);
+            expect(await contract.xc20ToAxelarToken(chain.xc20Samples[1])).to.equal(tokenAddress);
         });
         it('should fail to add a second wrapping without another xc20', async () => {
-            await addWrapping(chain, 'aUSDC', wallet);
-            expect(addWrapping(chain, 'symbol', wallet)).to.be.rejectedWith(new Error('Need to add more XC20s.'));
+            await addMapping(chain, 'aUSDC', wallet);
+            expect(addMapping(chain, 'symbol', wallet)).to.be.rejectedWith(new Error('Need to add more XC20s.'));
         });
     });
 
     describe('wrap/unwrap', () => {
         let xc20;
         beforeEach(async () => {
-            await addWrapping(chain, 'aUSDC', wallet);
-            xc20 = new Contract(await contract.wrapped(usdc.address), XC20Sample.abi, wallet);
+            await addMapping(chain, 'aUSDC', wallet);
+            xc20 = new Contract(await contract.axelarTokenToXc20(usdc.address), XC20Sample.abi, wallet);
         });
         it('should wrap and unwrap', async () => {
             const amountWrapped = BigInt(2e6);
@@ -117,31 +117,33 @@ describe('XC20 Wrapper', () => {
             const remoteUsdcAddress = await remoteGateway.tokenAddresses('aUSDC');
             const remoteUsdc = new Contract(remoteUsdcAddress, IERC20.abi, remoteWallet);
             const gasReceiver = new Contract(remote.gasReceiver, IAxelarGasService.abi, remoteWallet);
-            
+
             expect(BigInt(await remoteUsdc.balanceOf(wallet.address))).to.equal(initialBalance);
             expect(BigInt(await xc20.balanceOf(wallet.address))).to.equal(0n);
 
             const payload = defaultAbiCoder.encode(['address'], [wallet.address]);
             const gasLimit = 1e6;
-            await (await gasReceiver.connect(remoteWallet).payNativeGasForContractCallWithToken(
-                remoteWallet.address,
-                chain.name,
-                contract.address,
-                payload,
-                'aUSDC',
-                amountWrapped,
-                remoteWallet.address,
-                {value: gasLimit},
-            )).wait();
+            await (
+                await gasReceiver
+                    .connect(remoteWallet)
+                    .payNativeGasForContractCallWithToken(
+                        remoteWallet.address,
+                        chain.name,
+                        contract.address,
+                        payload,
+                        'aUSDC',
+                        amountWrapped,
+                        remoteWallet.address,
+                        { value: gasLimit },
+                    )
+            ).wait();
             await (await remoteUsdc.connect(remoteWallet).approve(remoteGateway.address, amountWrapped)).wait();
             console.log(await remoteUsdc.balanceOf(remoteWallet.address));
-            await (await remoteGateway.connect(remoteWallet).callContractWithToken(
-                chain.name, 
-                contract.address, 
-                payload,
-                'aUSDC',
-                amountWrapped,
-            )).wait();
+            await (
+                await remoteGateway
+                    .connect(remoteWallet)
+                    .callContractWithToken(chain.name, contract.address, payload, 'aUSDC', amountWrapped)
+            ).wait();
             console.log(await remoteUsdc.balanceOf(remoteWallet.address));
             expect(BigInt(await remoteUsdc.balanceOf(remoteWallet.address))).to.equal(initialBalance - amountWrapped);
 
@@ -152,15 +154,15 @@ describe('XC20 Wrapper', () => {
                     }, ms);
                 });
             }
-            
+
             console.log('---', await usdc.balanceOf(wallet.address), contract.address);
             let newBalance = await xc20.balanceOf(wallet.address);
-            while(BigInt(newBalance) == 0n) {
+            while (BigInt(newBalance) == 0n) {
                 await sleep(2000);
                 newBalance = await xc20.balanceOf(wallet.address);
                 console.log('waiting...');
             }
-            
+
             expect(BigInt(await xc20.balanceOf(wallet.address))).to.equal(amountWrapped - BigInt(1e6));
         });
     });

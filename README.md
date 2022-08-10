@@ -23,7 +23,7 @@ To test the contracts:
 
 ```
 node scripts/addLocalXc20.js local  
-node scripts/addWrapping local aUSDC
+node scripts/addMapping local aUSDC
 ```
 
 See [test.js](test/test.js) for more in-depth tests.

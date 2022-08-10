@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.9;
 
-import './interfaces/IUpgradable.sol';
+import { IUpgradable } from './interfaces/IUpgradable.sol';
 
 contract Proxy {
     error InvalidImplementation();
