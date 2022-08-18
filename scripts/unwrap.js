@@ -11,30 +11,25 @@ const {
 const { keccak256, defaultAbiCoder } = require('ethers/lib/utils');
 
 const XC20Wrapper = require('../artifacts/contracts/XC20Wrapper.sol/XC20Wrapper.json');
+const XC20Asset = require('../artifacts/contracts/XC20Sample.sol/XC20Sample.json');
+const IAxelarGateway = require('../artifacts/@axelar-network/axelar-utils-solidity/contracts/interfaces/IAxelarGateway.sol/IAxelarGateway.json');
 
-async function addMapping(chain, symbol, walletUnconnected) {
-    const index = require(`./index.js`);
+async function unwrap(chain, symbol, amount, walletUnconnected) {
     const rpc = chain.rpc;
     const provider = getDefaultProvider(rpc);
     const wallet = walletUnconnected.connect(provider);
-    const wrapper = new Contract(chain.xc20Wrapper, XC20Wrapper.abi, wallet);
-    let i;
-
-    for (i = 0; i < chain.xc20Samples.length; i++) {
-        if ((await wrapper.xc20ToAxelarToken(chain.xc20Samples[i])) === AddressZero) break;
-    }
-
-    if (i === chain.xc20Samples.length) {
-        throw new Error('Need to add more XC20s.');
-    }
-
-    symbol = symbol || `TT${i}`;
-    console.log(`Adding wrapping for ${symbol} and ${chain.xc20Samples[i]}`);
-    await index.addToken(wrapper.address, symbol, chain.xc20Samples[i], wallet, BigInt(2e18));
+    const wrapperContract = new Contract(chain.xc20Wrapper, XC20Wrapper.abi, wallet);
+    const gatewayContract = new Contract(chain.gateway, IAxelarGateway.abi, wallet);
+    const tokenContractAddress = await gatewayContract.tokenAddresses(symbol);
+    const tokenContract = new Contract(await wrapperContract.axelarTokenToXc20(tokenContractAddress), XC20Asset.abi, wallet);
+    const approvalTx = await (await tokenContract.connect(wallet).approve(wrapperContract.address, amount)).wait();
+    const wrappedTx = await (await wrapperContract.connect(wallet).unwrap(tokenContract.address, amount)).wait();
+    
+    return { approvalTx, wrappedTx };
 }
 
 module.exports = {
-    addMapping,
+    unwrap,
 };
 
 if (require.main === module) {
@@ -59,8 +54,9 @@ if (require.main === module) {
 
     const chain = chains[0];
     const symbol = process.argv[3];
+    const amount = process.argv[4];
 
-    addMapping(chain, symbol, wallet).then(() => {
-        setJSON(chains, './info/local.json');
+    unwrap(chain, symbol, amount, wallet).then(({ approvalTx, wrappedTx }) => {
+        console.log("unwrapped ",symbol, " on ",chain.name, " at tx ",wrappedTx.transactionHash);
     });
 }
