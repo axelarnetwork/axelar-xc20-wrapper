@@ -2,5 +2,3 @@ node_modules
 cache
 artifacts
 info/local.json
-
-.env

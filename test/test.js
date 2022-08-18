@@ -27,6 +27,7 @@ const XC20Sample = require('../artifacts/contracts/XC20Sample.sol/XC20Sample.jso
 const IAxelarGasService = require('../artifacts/@axelar-network/axelar-cgp-solidity/contracts/interfaces/IAxelarGasService.sol/IAxelarGasService.json');
 const { setLogger } = require('@axelar-network/axelar-local-dev/dist/utils.js');
 
+const deployer_key = process.env.PRIVATE_KEY;
 const deployer_address = new Wallet(process.env.PRIVATE_KEY).address;
 
 let contract;
