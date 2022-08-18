@@ -20,7 +20,7 @@ for file in $(find "$SOURCE" -name '*.sol' -print); do
     path="${file#${SOURCE}/}"
     mkdir -p "$OUTPUT"/"$(dirname "${path}")"
 
-    hardhat flatten "$file" > "$OUTPUT/$path"
+    npx hardhat flatten "$file" > "$OUTPUT/$path"
 done
 
 if [ -z "$(ls -A $OUTPUT)" ]; then

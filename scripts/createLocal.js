@@ -27,8 +27,7 @@ module.exports = {
 };
 
 if (require.main === module) {
-    const deployerKey = keccak256(defaultAbiCoder.encode(['string'], [process.env.PRIVATE_KEY_GENERATOR]));
-    const deployerAddress = new Wallet(deployerKey).address;
+    const deployerAddress = new Wallet(process.env.PRIVATE_KEY).address;
 
     const toFund = [deployerAddress];
 

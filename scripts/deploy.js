@@ -39,8 +39,7 @@ if (require.main === module) {
 
     const chains = temp;
 
-    const privateKey = keccak256(defaultAbiCoder.encode(['string'], [process.env.PRIVATE_KEY_GENERATOR]));
-    const wallet = new Wallet(privateKey);
+    const wallet = new Wallet(process.env.PRIVATE_KEY);
 
     deploy(env, chains, wallet);
 }

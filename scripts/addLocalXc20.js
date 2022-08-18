@@ -14,12 +14,11 @@ module.exports = {
 };
 
 if (require.main === module) {
-    const privateKey = keccak256(defaultAbiCoder.encode(['string'], [process.env.PRIVATE_KEY_GENERATOR]));
-    const wallet = new Wallet(privateKey);
+    const wallet = new Wallet(process.env.PRIVATE_KEY);
 
-    const chains = require(`../info/local.json`);
+    const chains = require(`../info/testnet.json`);
 
     addLocalXc20(chains[0], wallet).then(() => {
-        setJSON(chains, './info/local.json');
+        setJSON(chains, './info/testnet.json');
     });
 }

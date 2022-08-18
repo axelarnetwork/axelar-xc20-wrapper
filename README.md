@@ -5,7 +5,12 @@ npm i
 npm run build
 ```
 
-Add a string for PRIVATE_KEY_GENERATOR to `.env` to get your own private key.
+To set up your EVM account:
+
+```
+cp .env.example .env
+#then copy your private key to use in this exercise
+```
 
 To create a local Moonbeam (on a separate terminal):
 
@@ -22,7 +27,7 @@ node scripts/deploy local
 To test the contracts:
 
 ```
-node scripts/addLocalXc20.js local  
+node scripts/addLocalXc20.js local
 node scripts/addMapping local aUSDC
 ```
 
