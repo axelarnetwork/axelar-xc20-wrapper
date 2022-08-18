@@ -73,13 +73,13 @@ node scripts/addMapping testnet <AXELAR_ERC20_TOKEN_SYMBOL> #pairs the XC-20 tok
 #### To test the wrap feature:
 
 ```
-node scripts/wrap local aUSDC 1000000
+node scripts/wrap testnet aUSDC 1000000
 ```
 
 #### To test the unwrap feature:
 
 ```
-node scripts/unwrap local aUSDC 1000000
+node scripts/unwrap testnet aUSDC 1000000
 ```
 
 ## Other
