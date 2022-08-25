@@ -5,7 +5,6 @@ const {
     testnetInfo,
 } = require('@axelar-network/axelar-local-dev');
 const { Wallet, getDefaultProvider } = require('ethers');
-const { keccak256, defaultAbiCoder } = require('ethers/lib/utils');
 
 async function deploy(env, chains, wallet) {
     const index = require(`./index.js`);

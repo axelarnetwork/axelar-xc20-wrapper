@@ -1,18 +1,15 @@
 'use strict';
 require('dotenv').config();
 const { testnetInfo } = require('@axelar-network/axelar-local-dev');
-const { setJSON } = require('@axelar-network/axelar-local-dev/dist/utils');
 const {
     Wallet,
     getDefaultProvider,
     Contract,
-    constants: { AddressZero },
 } = require('ethers');
-const { keccak256, defaultAbiCoder } = require('ethers/lib/utils');
 
 const XC20Wrapper = require('../artifacts/contracts/XC20Wrapper.sol/XC20Wrapper.json');
 const IERC20 = require('../artifacts/contracts/interfaces/IERC20.sol/IERC20.json');
-const IAxelarGateway = require('../artifacts/@axelar-network/axelar-utils-solidity/contracts/interfaces/IAxelarGateway.sol/IAxelarGateway.json');
+const IAxelarGateway = require('../artifacts/@axelar-network/axelar-gmp-sdk-solidity/contracts/interfaces/IAxelarGateway.sol/IAxelarGateway.json');
 
 async function wrap(chain, symbol, amount, walletUnconnected) {
     const rpc = chain.rpc;

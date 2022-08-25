@@ -8,7 +8,6 @@ const {
     Contract,
     constants: { AddressZero },
 } = require('ethers');
-const { keccak256, defaultAbiCoder } = require('ethers/lib/utils');
 
 const XC20Wrapper = require('../artifacts/contracts/XC20Wrapper.sol/XC20Wrapper.json');
 
