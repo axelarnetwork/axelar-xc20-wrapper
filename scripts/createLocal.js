@@ -1,7 +1,5 @@
 const { createAndExport } = require('@axelar-network/axelar-local-dev');
-const {
-    Wallet,
-} = require('ethers');
+const { Wallet } = require('ethers');
 require('dotenv').config();
 
 async function createLocal(toFund, chains = null) {

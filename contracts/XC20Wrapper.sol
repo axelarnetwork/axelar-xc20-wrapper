@@ -17,7 +17,7 @@ contract XC20Wrapper is IXC20Wrapper, AxelarExecutable, Upgradable {
     bytes32 public xc20Codehash;
     bytes32 public immutable override contractId = keccak256('xc20-wrapper');
 
-    constructor(address gatewayAddress_) AxelarExecutable (gatewayAddress_) {}
+    constructor(address gatewayAddress_) AxelarExecutable(gatewayAddress_) {}
 
     function _setup(bytes calldata data) internal override {
         (address owner_, bytes32 codehash_) = abi.decode(data, (address, bytes32));

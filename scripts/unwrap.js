@@ -1,11 +1,7 @@
 'use strict';
 require('dotenv').config();
 const { testnetInfo } = require('@axelar-network/axelar-local-dev');
-const {
-    Wallet,
-    getDefaultProvider,
-    Contract,
-} = require('ethers');
+const { Wallet, getDefaultProvider, Contract } = require('ethers');
 
 const XC20Wrapper = require('../artifacts/contracts/XC20Wrapper.sol/XC20Wrapper.json');
 const XC20Asset = require('../artifacts/contracts/XC20Sample.sol/XC20Sample.json');
@@ -21,7 +17,7 @@ async function unwrap(chain, symbol, amount, walletUnconnected) {
     const tokenContract = new Contract(await wrapperContract.axelarTokenToXc20(tokenContractAddress), XC20Asset.abi, wallet);
     const approvalTx = await (await tokenContract.connect(wallet).approve(wrapperContract.address, amount)).wait();
     const wrappedTx = await (await wrapperContract.connect(wallet).unwrap(tokenContract.address, amount)).wait();
-    
+
     return { approvalTx, wrappedTx };
 }
 
@@ -54,6 +50,6 @@ if (require.main === module) {
     const amount = process.argv[4];
 
     unwrap(chain, symbol, amount, wallet).then(({ approvalTx, wrappedTx }) => {
-        console.log("unwrapped ",symbol, " on ",chain.name, " at tx ",wrappedTx.transactionHash);
+        console.log('unwrapped ', symbol, ' on ', chain.name, ' at tx ', wrappedTx.transactionHash);
     });
 }
