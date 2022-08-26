@@ -5,7 +5,6 @@ const {
     testnetInfo,
 } = require('@axelar-network/axelar-local-dev');
 const { Wallet } = require('ethers');
-const { keccak256, defaultAbiCoder } = require('ethers/lib/utils');
 const index = require(`./index.js`);
 
 async function addLocalXc20(chain, walletUnconnected) {

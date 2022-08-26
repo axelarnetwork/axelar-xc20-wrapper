@@ -3,8 +3,8 @@
 pragma solidity 0.8.9;
 
 import { IERC20 } from './interfaces/IERC20.sol';
-import { AxelarExecutable } from '@axelar-network/axelar-utils-solidity/contracts/executables/AxelarExecutable.sol';
-import { IAxelarGateway } from '@axelar-network/axelar-utils-solidity/contracts/interfaces/IAxelarGateway.sol';
+import { AxelarExecutable } from '@axelar-network/axelar-gmp-sdk-solidity/contracts/executables/AxelarExecutable.sol';
+import { IAxelarGateway } from '@axelar-network/axelar-gmp-sdk-solidity/contracts/interfaces/IAxelarGateway.sol';
 import { Upgradable } from './Upgradable.sol';
 import { IXC20 } from './interfaces/IXC20.sol';
 import { LocalAsset } from './interfaces/LocalAsset.sol';
@@ -15,17 +15,9 @@ contract XC20Wrapper is IXC20Wrapper, AxelarExecutable, Upgradable {
     mapping(address => address) public xc20ToAxelarToken;
 
     bytes32 public xc20Codehash;
-    address public immutable gatewayAddress;
     bytes32 public immutable override contractId = keccak256('xc20-wrapper');
 
-    constructor(address gatewayAddress_) {
-        if (gatewayAddress_ == address(0)) revert ZeroAddress();
-        gatewayAddress = gatewayAddress_;
-    }
-
-    function gateway() public view override returns (IAxelarGateway) {
-        return IAxelarGateway(gatewayAddress);
-    }
+    constructor(address gatewayAddress_) AxelarExecutable(gatewayAddress_) {}
 
     function _setup(bytes calldata data) internal override {
         (address owner_, bytes32 codehash_) = abi.decode(data, (address, bytes32));
@@ -39,7 +31,7 @@ contract XC20Wrapper is IXC20Wrapper, AxelarExecutable, Upgradable {
         string memory newName,
         string memory newSymbol
     ) external payable onlyOwner {
-        address axelarToken = gateway().tokenAddresses(symbol);
+        address axelarToken = gateway.tokenAddresses(symbol);
         if (axelarToken == address(0)) revert NotAxelarToken();
         if (xc20Token.codehash != xc20Codehash) revert NotXc20Token();
         if (axelarTokenToXc20[axelarToken] != address(0)) revert AlreadyWrappingAxelarToken();
@@ -119,7 +111,7 @@ contract XC20Wrapper is IXC20Wrapper, AxelarExecutable, Upgradable {
         uint256 amount
     ) internal override {
         address receiver = abi.decode(payload, (address));
-        address tokenAddress = gateway().tokenAddresses(tokenSymbol);
+        address tokenAddress = gateway.tokenAddresses(tokenSymbol);
         address xc20 = axelarTokenToXc20[tokenAddress];
         if (xc20 != address(0)) {
             bool success = _safeMint(xc20, receiver, amount);

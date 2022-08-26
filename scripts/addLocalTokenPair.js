@@ -2,7 +2,6 @@
 require('dotenv').config();
 const { setJSON } = require('@axelar-network/axelar-local-dev/dist/utils');
 const { Wallet } = require('ethers');
-const { keccak256, defaultAbiCoder } = require('ethers/lib/utils');
 const index = require(`./index.js`);
 
 async function addLocalTokenPair(chain, walletUnconnected) {

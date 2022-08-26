@@ -1,8 +1,5 @@
 const { createAndExport } = require('@axelar-network/axelar-local-dev');
-const {
-    Wallet,
-    utils: { keccak256, defaultAbiCoder },
-} = require('ethers');
+const { Wallet } = require('ethers');
 require('dotenv').config();
 
 async function createLocal(toFund, chains = null) {

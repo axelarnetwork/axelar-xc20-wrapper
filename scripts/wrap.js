@@ -1,18 +1,11 @@
 'use strict';
 require('dotenv').config();
 const { testnetInfo } = require('@axelar-network/axelar-local-dev');
-const { setJSON } = require('@axelar-network/axelar-local-dev/dist/utils');
-const {
-    Wallet,
-    getDefaultProvider,
-    Contract,
-    constants: { AddressZero },
-} = require('ethers');
-const { keccak256, defaultAbiCoder } = require('ethers/lib/utils');
+const { Wallet, getDefaultProvider, Contract } = require('ethers');
 
 const XC20Wrapper = require('../artifacts/contracts/XC20Wrapper.sol/XC20Wrapper.json');
 const IERC20 = require('../artifacts/contracts/interfaces/IERC20.sol/IERC20.json');
-const IAxelarGateway = require('../artifacts/@axelar-network/axelar-utils-solidity/contracts/interfaces/IAxelarGateway.sol/IAxelarGateway.json');
+const IAxelarGateway = require('../artifacts/@axelar-network/axelar-gmp-sdk-solidity/contracts/interfaces/IAxelarGateway.sol/IAxelarGateway.json');
 
 async function wrap(chain, symbol, amount, walletUnconnected) {
     const rpc = chain.rpc;
@@ -24,7 +17,7 @@ async function wrap(chain, symbol, amount, walletUnconnected) {
 
     const approvalTx = await (await tokenContract.connect(wallet).approve(wrapperContract.address, amount)).wait();
     const wrappedTx = await (await wrapperContract.connect(wallet).wrap(tokenContract.address, amount)).wait();
-    
+
     return { approvalTx, wrappedTx };
 }
 
@@ -57,6 +50,6 @@ if (require.main === module) {
     const amount = process.argv[4];
 
     wrap(chain, symbol, amount, wallet).then(({ approvalTx, wrappedTx }) => {
-        console.log("wrapped ",symbol, " on ",chain.name, " at tx ",wrappedTx.transactionHash);
+        console.log('wrapped ', symbol, ' on ', chain.name, ' at tx ', wrappedTx.transactionHash);
     });
 }

@@ -12,8 +12,6 @@ const { expect } = chai;
 chai.use(require('chai-as-promised'));
 const { stopAll } = require('@axelar-network/axelar-local-dev');
 
-const { keccak256 } = require('ethers/lib/utils');
-
 const { createLocal } = require('../scripts/createLocal.js');
 const { deploy } = require('../scripts/deploy');
 const { addMapping } = require('../scripts/addMapping');
@@ -22,13 +20,13 @@ const { addLocalXc20 } = require('../scripts/addLocalXc20');
 
 const XC20Wrapper = require('../artifacts/contracts/XC20Wrapper.sol/XC20Wrapper.json');
 const IERC20 = require('../artifacts/contracts/interfaces/IERC20.sol/IERC20.json');
-const IAxelarGateway = require('../artifacts/@axelar-network/axelar-utils-solidity/contracts/interfaces/IAxelarGateway.sol/IAxelarGateway.json');
+const IAxelarGateway = require('../artifacts/@axelar-network/axelar-gmp-sdk-solidity/contracts/interfaces/IAxelarGateway.sol/IAxelarGateway.json');
 const XC20Sample = require('../artifacts/contracts/XC20Sample.sol/XC20Sample.json');
 const IAxelarGasService = require('../artifacts/@axelar-network/axelar-cgp-solidity/contracts/interfaces/IAxelarGasService.sol/IAxelarGasService.json');
 const { setLogger } = require('@axelar-network/axelar-local-dev/dist/utils.js');
 
-const deployer_key = process.env.PRIVATE_KEY;
-const deployer_address = new Wallet(process.env.PRIVATE_KEY).address;
+const deployerKey = process.env.PRIVATE_KEY;
+const deployerAddress = new Wallet(process.env.PRIVATE_KEY).address;
 
 let contract;
 let provider;
@@ -43,12 +41,12 @@ setLogger((...args) => {});
 
 describe('XC20 Wrapper', () => {
     beforeEach(async () => {
-        const toFund = [deployer_address];
+        const toFund = [deployerAddress];
         await createLocal(toFund, ['Moonbeam', 'Avalanche']);
         chains = require('../info/local.json');
         chain = chains[0];
         provider = getDefaultProvider(chain.rpc);
-        wallet = new Wallet(deployer_key, provider);
+        wallet = new Wallet(deployerKey, provider);
         await deploy('local', chains, wallet);
         contract = new Contract(chain.xc20Wrapper, XC20Wrapper.abi, wallet);
         await addLocalXc20(chain, wallet);
@@ -112,7 +110,7 @@ describe('XC20 Wrapper', () => {
             const amountWrapped = BigInt(2e6);
             const remote = chains[1];
             const remoteProvider = getDefaultProvider(remote.rpc);
-            const remoteWallet = new Wallet(deployer_key, remoteProvider);
+            const remoteWallet = new Wallet(deployerKey, remoteProvider);
             const remoteGateway = new Contract(remote.gateway, IAxelarGateway.abi, remoteWallet);
             const remoteUsdcAddress = await remoteGateway.tokenAddresses('aUSDC');
             const remoteUsdc = new Contract(remoteUsdcAddress, IERC20.abi, remoteWallet);
@@ -123,6 +121,7 @@ describe('XC20 Wrapper', () => {
 
             const payload = defaultAbiCoder.encode(['address'], [wallet.address]);
             const gasLimit = 1e6;
+
             await (
                 await gasReceiver
                     .connect(remoteWallet)
@@ -138,13 +137,11 @@ describe('XC20 Wrapper', () => {
                     )
             ).wait();
             await (await remoteUsdc.connect(remoteWallet).approve(remoteGateway.address, amountWrapped)).wait();
-            console.log(await remoteUsdc.balanceOf(remoteWallet.address));
             await (
                 await remoteGateway
                     .connect(remoteWallet)
                     .callContractWithToken(chain.name, contract.address, payload, 'aUSDC', amountWrapped)
             ).wait();
-            console.log(await remoteUsdc.balanceOf(remoteWallet.address));
             expect(BigInt(await remoteUsdc.balanceOf(remoteWallet.address))).to.equal(initialBalance - amountWrapped);
 
             function sleep(ms) {
@@ -155,9 +152,9 @@ describe('XC20 Wrapper', () => {
                 });
             }
 
-            console.log('---', await usdc.balanceOf(wallet.address), contract.address);
             let newBalance = await xc20.balanceOf(wallet.address);
-            while (BigInt(newBalance) == 0n) {
+
+            while (BigInt(newBalance) === 0n) {
                 await sleep(2000);
                 newBalance = await xc20.balanceOf(wallet.address);
                 console.log('waiting...');
