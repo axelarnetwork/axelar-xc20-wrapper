@@ -8,9 +8,7 @@
     "constAddressDeployer": "0x617179a15fEAa53Fa82ae80b0fc3E85b7359a748",
     "tokenName": "DEV",
     "tokenSymbol": "DEV",
-    "xc20Wrapper": "0xaAbeb41FA2b7e525364bBE3801B743B78a404326",
-    "xc20Samples": [
-      "0x6Fd261B59DC41e2A001E5141Ce41025f4175a419"
-    ]
+    "xc20Wrapper": "0x798ce91BBfa900B4680904D4d8d560dAf11D7a98",
+    "xc20Samples": []
   }
 ]

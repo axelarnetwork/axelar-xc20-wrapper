@@ -21,11 +21,19 @@ async function deploy(chain, wallet) {
     console.log(`Deployed XC20Wrapper for ${chain.name} at ${impl.address}.`);
     console.log(`Deploying Proxy for ${chain.name}.`);
 
-    const xc20Sample = await deployContract(wallet, XC20Sample, [AddressZero, 'i trust this will hash chaotically']);
-    const provider = getDefaultProvider(chain.rpc);
-    const implementationCode = await provider.getCode(xc20Sample.address);
+    let codeHash;
+    if(process.argv[2] === 'local') {
+        // Creates a dummy xc20 that can be used on local
+        const xc20Sample = await deployContract(wallet, XC20Sample, [AddressZero, 'i trust this will hash chaotically']);
+        const provider = getDefaultProvider(chain.rpc);
+        const implementationCode = await provider.getCode(xc20Sample.address);
+        codeHash = keccak256(implementationCode);
+    }
+    else {
+        // Code hash for the bytes at an actual mintable xc20
+        codeHash = '0x9c8d1cd1e8729d5714bbb461fcce463172f4b1c3ae57698a589dc69a747d4051';
+    }
 
-    const codeHash = keccak256(implementationCode);
     const proxy = await deployContract(wallet, Proxy, [
         impl.address,
         // 0x9a289e138d67f0784b748f6f06b39ef6f9cfd5eba9f8467f55002494cf47d343
