@@ -51,8 +51,8 @@ node scripts/unwrap local aUSDC 1000000
 
 ## Testnet Development
 
-The XC-wrapper has already been deployed and verified on Moonbeam testnet: 0xaAbeb41FA2b7e525364bBE3801B743B78a404326
-https://moonbase.moonscan.io/address/0xaAbeb41FA2b7e525364bBE3801B743B78a404326#readProxyContract
+The XC-wrapper has already been deployed and verified on Moonbeam testnet: 0x798ce91BBfa900B4680904D4d8d560dAf11D7a98
+https://moonbase.moonscan.io/address/0x798ce91BBfa900B4680904D4d8d560dAf11D7a98#readProxyContract
 
 #### To test the admin functions to add an XC token to wrap an Axelar ERC-20 token:
 
@@ -85,3 +85,7 @@ node scripts/unwrap testnet aUSDC 1000000
 ## Other
 
 See [test.js](test/test.js) for more in-depth tests.
+
+
+
+0xFFFFFFFEB00FEB2A14AD90D9D4D871EBA59DD9C
